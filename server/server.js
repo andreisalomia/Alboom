@@ -16,3 +16,5 @@ app.use('/api/auth', require('./routes/auth'));
 app.listen(process.env.PORT, () => {
   console.log(`Server on http://localhost:${process.env.PORT}`);
 });
+
+app.use('/api/music', require('./routes/music'));

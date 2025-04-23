@@ -1,3 +1,5 @@
+import MusicFeed from './MusicFeed';
+
 export default function Dashboard({ user, onLogout }) {
     return (
         <div>
@@ -13,6 +15,8 @@ export default function Dashboard({ user, onLogout }) {
             )}
 
             <button onClick={onLogout}>Logout</button>
+
+            <MusicFeed />
         </div>
     );
 }
