@@ -1,23 +1,36 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react';
+import './styles/App.css';
+import { jwtDecode } from 'jwt-decode';
+import Home from './components/Home';
+import Dashboard from './components/Dashboard';
 
 function App() {
+  const token = localStorage.getItem('token');
+  const [userInfo, setUserInfo] = useState(() => {
+    try {
+      return token ? jwtDecode(token) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUserInfo(null);
+  };
+
+  const handleLogin = () => {
+    const newToken = localStorage.getItem('token');
+    setUserInfo(jwtDecode(newToken));
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {!userInfo ? (
+        <Home onLogin={handleLogin} />
+      ) : (
+        <Dashboard user={userInfo} onLogout={handleLogout} />
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
+  role: { type: String, enum: ['authenticated_user', 'moderator', 'admin'], default: 'authenticated_user' },
   profileImage: String,
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   favoriteArtists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Artist' }],
