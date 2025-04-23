@@ -1,8 +1,14 @@
 const mongoose = require('mongoose');
+
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  role: { type: String, default: 'user' }
-});
+  role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
+  profileImage: String,
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  favoriteArtists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Artist' }],
+  notifications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }]
+}, { timestamps: true });
+
 module.exports = mongoose.model('User', userSchema);
