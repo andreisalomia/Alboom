@@ -3,7 +3,7 @@ import axios from 'axios';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import 'react-lazy-load-image-component/src/effects/blur.css';
 
-export default function MusicFeed() {
+export default function MusicFeed({ refreshTrigger }) {
   const [albums, setAlbums] = useState([]);
   const [artists, setArtists] = useState([]);
   const [songs, setSongs] = useState([]);
@@ -19,8 +19,9 @@ export default function MusicFeed() {
       setArtists(artistsRes.data);
       setSongs(songsRes.data);
     };
+
     fetchData();
-  }, []);
+  }, [refreshTrigger]); // 🔁 se reactivează când triggerul se schimbă
 
   return (
     <div>

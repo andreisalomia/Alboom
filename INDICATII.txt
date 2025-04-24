@@ -1,7 +1,9 @@
-user default teste: andreisalomia100@gmail.com - pulamea1
+user default teste: froggychair123@gmail.com - pulamea1
 sa nu uitati de npm install ca am mai adaugat pachete (+ npm install concurrently --save-dev)
 
 de adaugat pagini specifice pentru cantec/artist/album si de facut fiecare chestie de la featured pe main page clickable
 
 - rulati numai "npm run dev" in folderul principal
-- avem ADMIN: admin@alboom.com - adminpass123
+- avem ADMIN: alboom.noreply@gmail.com - adminpass123 (pe gmail avem parola: vladimirregele dar e cu auth pe telefonul meu)
+
+-- de facut toata partea cu login/logout/register/schimbare parola drept un singur bloc cu meniu hamburger

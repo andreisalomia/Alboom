@@ -1,21 +1,28 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-export default function RegisterForm() {
+export default function RegisterForm({ onRegistered }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
-      setMsg(`Created account with ID: ${res.data.userId}`);
+      const res = await axios.post('/api/auth/register', { name, email, password });
+      setMsg(res.data.message || 'Account created. Check your email.');
+      setSuccess(true);
+      onRegistered(email);
     } catch (err) {
       setMsg(err.response?.data?.message || 'Unknown error');
     }
   };
+
+  if (success) {
+    return <p>{msg}</p>;
+  }
 
   return (
     <form onSubmit={handleRegister}>

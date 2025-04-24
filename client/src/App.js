@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import './styles/App.css';
 import { jwtDecode } from 'jwt-decode';
-import Home from './components/Home';
-import Dashboard from './components/Dashboard';
+import HomePage from './components/Home';
+// import Dashboard from './components/Dashboard';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -26,10 +26,11 @@ function App() {
 
   return (
     <div className="App">
-      {!userInfo ? (
-        <Home onLogin={handleLogin} />
-      ) : (
-        <Dashboard user={userInfo} onLogout={handleLogout} />
+      <HomePage user={userInfo} onLogin={handleLogin} onLogout={handleLogout} />
+
+      {userInfo?.role === 'admin' && (
+        <div style={{ marginTop: '3rem' }}>
+        </div>
       )}
     </div>
   );
