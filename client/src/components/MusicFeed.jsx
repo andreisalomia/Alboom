@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 
 export default function MusicFeed() {
   const [albums, setAlbums] = useState([]);
@@ -26,7 +28,12 @@ export default function MusicFeed() {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
         {albums.map(album => (
           <div key={album._id} style={{ border: '1px solid #ccc', padding: '1rem', width: 200 }}>
-            <img src={album.coverImage} alt={album.title} style={{ width: '100%' }} />
+            <LazyLoadImage
+              src={album.coverImage}
+              alt={album.title}
+              effect="blur"
+              width="100%"
+            />
             <h4>{album.title}</h4>
             <p>By: {album.artist?.name}</p>
             <p>Genre: {album.genre}</p>
@@ -38,7 +45,12 @@ export default function MusicFeed() {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
         {artists.map(artist => (
           <div key={artist._id} style={{ border: '1px solid #ccc', padding: '1rem', width: 200 }}>
-            <img src={artist.image} alt={artist.name} style={{ width: '100%' }} />
+            <LazyLoadImage
+              src={artist.image}
+              alt={artist.name}
+              effect="blur"
+              width="100%"
+            />
             <h4>{artist.name}</h4>
             <p>{artist.bio?.substring(0, 60)}...</p>
           </div>
