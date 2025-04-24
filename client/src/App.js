@@ -2,7 +2,10 @@ import { useState } from 'react';
 import './styles/App.css';
 import { jwtDecode } from 'jwt-decode';
 import HomePage from './components/Home';
-// import Dashboard from './components/Dashboard';
+import { Routes, Route } from 'react-router-dom';
+import SongDetail from './components/SongDetail';
+import AlbumDetail from './components/AlbumDetail';
+import ArtistDetail from './components/ArtistDetail';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -26,12 +29,21 @@ function App() {
 
   return (
     <div className="App">
-      <HomePage user={userInfo} onLogin={handleLogin} onLogout={handleLogout} />
-
-      {userInfo?.role === 'admin' && (
-        <div style={{ marginTop: '3rem' }}>
-        </div>
-      )}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              user={userInfo}
+              onLogin={handleLogin}
+              onLogout={handleLogout}
+            />
+          }
+        />
+        <Route path="/song/:id" element={<SongDetail />} />
+        <Route path="/album/:id" element={<AlbumDetail />} />
+        <Route path="/artist/:id" element={<ArtistDetail />} />
+      </Routes>
     </div>
   );
 }
