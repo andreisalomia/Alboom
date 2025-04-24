@@ -3,13 +3,21 @@ import axios from 'axios';
 
 export default function MusicFeed() {
   const [albums, setAlbums] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [songs, setSongs] = useState([]);
 
   useEffect(() => {
-    const fetchAlbums = async () => {
-      const res = await axios.get('http://localhost:5000/api/music/albums');
-      setAlbums(res.data);
+    const fetchData = async () => {
+      const [albumsRes, artistsRes, songsRes] = await Promise.all([
+        axios.get('/api/music/albums'),
+        axios.get('/api/music/artists'),
+        axios.get('/api/music/songs')
+      ]);
+      setAlbums(albumsRes.data);
+      setArtists(artistsRes.data);
+      setSongs(songsRes.data);
     };
-    fetchAlbums();
+    fetchData();
   }, []);
 
   return (
@@ -22,6 +30,30 @@ export default function MusicFeed() {
             <h4>{album.title}</h4>
             <p>By: {album.artist?.name}</p>
             <p>Genre: {album.genre}</p>
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ marginTop: '2rem' }}>Featured Artists</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+        {artists.map(artist => (
+          <div key={artist._id} style={{ border: '1px solid #ccc', padding: '1rem', width: 200 }}>
+            <img src={artist.image} alt={artist.name} style={{ width: '100%' }} />
+            <h4>{artist.name}</h4>
+            <p>{artist.bio?.substring(0, 60)}...</p>
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ marginTop: '2rem' }}>Featured Songs</h2>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+        {songs.map(song => (
+          <div key={song._id} style={{ border: '1px solid #ccc', padding: '1rem', width: 200 }}>
+            <h4>{song.title}</h4>
+            <p>Artist: {song.artist?.name}</p>
+            <p>Album: {song.album?.title || 'Single'}</p>
+            <p>Genre: {song.genre}</p>
+            <p>Duration: {Math.floor(song.duration / 60)}:{String(song.duration % 60).padStart(2, '0')} min</p>
           </div>
         ))}
       </div>

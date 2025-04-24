@@ -1,0 +1,33 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal {
+    background: #fff;
+    padding: 24px;
+    border-radius: 12px;
+    min-width: 320px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+.modal h3 {
+    margin-top: 0;
+}
+.modal form input,
+.modal form textarea {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 8px;
+}
+.modal button {
+    padding: 8px 16px;
+    border: none;
+    background: #0a7;
+    cursor: pointer;
+    color: #fff;
+    border-radius: 6px;
+}

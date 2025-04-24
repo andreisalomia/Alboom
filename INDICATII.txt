@@ -1,0 +1,7 @@
+user default teste: andreisalomia100@gmail.com - pulamea1
+sa nu uitati de npm install ca am mai adaugat pachete (+ npm install concurrently --save-dev)
+
+de adaugat pagini specifice pentru cantec/artist/album si de facut fiecare chestie de la featured pe main page clickable
+
+- rulati numai "npm run dev" in folderul principal
+- avem ADMIN: admin@alboom.com - adminpass123

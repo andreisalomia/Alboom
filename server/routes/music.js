@@ -12,7 +12,7 @@ router.get('/artists', async (req, res) => {
 
 router.get('/albums', async (req, res) => {
     const albums = await Album.find().populate('artist');
-    console.log('Albums with populated artists:', JSON.stringify(albums, null, 2));
+    // console.log('Albume:', JSON.stringify(albums, null, 2));
     res.json(albums);
   });  
 
