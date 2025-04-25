@@ -36,7 +36,7 @@ router.post('/register', async (req, res) => {
   });
 
   await transporter.sendMail({
-    from: '"Alboom" <no-reply@alboom.com>',
+    from: '"Alboom" <alboom.noreply@gmail.com>',
     to: email,
     subject: 'Verify your Alboom account',
     text: `Hi ${name},\n\nYour verification code is: ${verificationCode}\n\nPlease enter this code to activate your account.`,
@@ -62,13 +62,13 @@ router.post('/verify', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  
+
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
   if (!user || !await bcrypt.compare(password, user.password))
     return res.status(401).json({ message: 'Invalid credentials' });
-  
+
   if (!user.verified)
     return res.status(403).json({ message: 'Please verify your email before logging in.' });
 
