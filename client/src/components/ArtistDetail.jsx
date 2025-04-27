@@ -1,11 +1,68 @@
-import { useParams } from 'react-router-dom';
+// ArtistDetail.jsx
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
-export default function ArtistDetail() {
-  const { id } = useParams();
+// Cache simplu în memorie pentru artiști
+const artistCache = {};
+
+function ArtistDetail() {
+  const { id } = useParams();                      // ID-ul artistului din URL
+  const [artist, setArtist] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    // Dacă datele sunt în cache, le folosim și nu mai facem fetch
+    if (artistCache[id]) {
+      setArtist(artistCache[id]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(false);
+    axios.get(`/api/music/artists/${id}`)
+      .then(response => {
+        setArtist(response.data);
+        artistCache[id] = response.data;           // stocăm în cache
+      })
+      .catch(err => {
+        console.error("Eroare la preluarea artistului:", err);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return <div>Se încarcă detaliile artistului...</div>;
+  }
+
+  if (error || !artist) {
+    return <div>Nu am găsit detalii pentru artist.</div>;
+  }
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Artist Detail</h2>
-      <p>Artist ID: {id}</p>
+    <div className="artist-detail">
+      <h2>{artist.name}</h2>
+      {artist.image && <img src={artist.image} alt={`Imagine ${artist.name}`} />}
+      <p>{artist.biography}</p>
+      <h3>Albume:</h3>
+      <ul>
+        {artist.albums?.map(album => (
+          <li key={album.id}>{album.title}</li>
+        ))}
+      </ul>
+      <h3>Piese:</h3>
+      <ul>
+        {artist.songs?.map(song => (
+          <li key={song.id}>{song.title}</li>
+        ))}
+      </ul>
     </div>
   );
 }
+
+export default ArtistDetail;
