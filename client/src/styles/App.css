@@ -2,6 +2,7 @@ body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
   background-color: #f0f2f5;
+  padding-top: 4.5rem; /* cat e inaltimea de la navbar ca sa nu faca overlap */
 }
 
 .App {
