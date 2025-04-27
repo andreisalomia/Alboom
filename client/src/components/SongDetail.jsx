@@ -10,62 +10,49 @@
 //   );
 // }
 
-// SongDetail.jsx
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
-// Cache simplu în memorie pentru piese (melodii)
-const songCache = {};
-
 function SongDetail() {
-  const { id } = useParams();                      // ID-ul piesei din URL
+  const { id } = useParams();
   const [song, setSong] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    if (songCache[id]) {
-      setSong(songCache[id]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(false);
     axios.get(`/api/music/songs/${id}`)
-      .then(response => {
-        setSong(response.data);
-        songCache[id] = response.data;             // memorăm în cache
-      })
-      .catch(err => {
-        console.error("Eroare la preluarea piesei:", err);
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .then(res => setSong(res.data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) {
-    return <div>Se încarcă detaliile piesei...</div>;
-  }
+  if (loading) return <p>Se încarcă...</p>;
+  if (error || !song) return <p>Piesa nu a putut fi găsită.</p>;
 
-  if (error || !song) {
-    return <div>Nu am găsit detalii pentru piesă.</div>;
-  }
+  // funcţie mică pt. durată MM:SS
+  const formatDur = (sec) => `${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
 
   return (
-    <div className="song-detail">
+    <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{song.title}</h2>
-      <p><strong>Artist:</strong> {song.artistName}</p>
-      {song.albumTitle && (
-        <p><strong>Album:</strong> {song.albumTitle}</p>
+
+      {/* coperta albumului, dacă există */}
+      {song.album?.coverImage && (
+        <img
+          src={song.album.coverImage}
+          alt={`Coperta album ${song.album.title}`}
+          style={{ width: 250, marginBottom: "1rem" }}
+        />
       )}
+
+      <p><strong>Artist:</strong> {song.artist?.name || "—"}</p>
+      {song.album && <p><strong>Album:</strong> {song.album.title}</p>}
       <p><strong>Gen:</strong> {song.genre}</p>
-      <p><strong>Durată:</strong> {song.duration}</p>
+      <p><strong>Durată:</strong> {formatDur(song.duration)}</p>
     </div>
   );
 }
 
 export default SongDetail;
+

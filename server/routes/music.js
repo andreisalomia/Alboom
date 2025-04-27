@@ -21,30 +21,50 @@ router.get('/songs', async (req, res) => {
   res.json(songs);
 });
 
-/*  ───────── NOI: DETALIU PE ID ───────── */
 router.get('/artists/:id', async (req, res) => {
   try {
-    const artist = await Artist.findById(req.params.id)
-      .populate('albums')                // discografie
-      .populate({                        // piese
-        path: 'albums',
-        populate: { path: 'songs' }
-      });
+    const { id } = req.params;
+
+    // 1. Artistul simplu (fără populate, că nu ne folosește)
+    const artist = await Artist.findById(id);
     if (!artist) return res.status(404).json({ message: 'Artist not found' });
-    res.json(artist);
+
+    // 2. Albumele și piesele asociate
+    const [albums, songs] = await Promise.all([
+      Album.find({ artist: id }).populate('songs'),   // tracklist în fiecare album
+      Song.find({ artist: id }).populate('album')     // pentru single-uri vezi albumul
+    ]);
+
+    // 3. Trimitem totul într-un singur JSON
+    res.json({
+      ...artist.toObject(),
+      albums,
+      songs
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
 
 router.get('/albums/:id', async (req, res) => {
   try {
-    const album = await Album.findById(req.params.id)
-      .populate('artist')
-      .populate('songs');
+    const { id } = req.params;
+
+    // 1. albumul + artistul
+    const album = await Album.findById(id).populate('artist');
     if (!album) return res.status(404).json({ message: 'Album not found' });
-    res.json(album);
+
+    // 2. toate piesele care au album = id  (ordine după tracklistul real – aici simplu după _id)
+    const songs = await Song.find({ album: id }).sort({ _id: 1 });
+
+    // 3. trimitem totul la front-end
+    res.json({
+      ...album.toObject(),
+      songs
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });
