@@ -10,7 +10,7 @@
 //   );
 // }
 
-// AlbumDetail.jsx
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -19,7 +19,7 @@ import { useParams } from "react-router-dom";
 const albumCache = {};
 
 function AlbumDetail() {
-  const { id } = useParams();                      // ID-ul albumului din URL
+  const { id } = useParams();
   const [album, setAlbum] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -36,7 +36,7 @@ function AlbumDetail() {
     axios.get(`/api/music/albums/${id}`)
       .then(response => {
         setAlbum(response.data);
-        albumCache[id] = response.data;            // stocăm datele în cache
+        albumCache[id] = response.data;
       })
       .catch(err => {
         console.error("Eroare la preluarea albumului:", err);

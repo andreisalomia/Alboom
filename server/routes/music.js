@@ -82,4 +82,35 @@ router.get('/songs/:id', async (req, res) => {
 });
 
 
+const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');   // scăpăm regex-ul
+
+router.get('/search', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json([]);                // întoarcem listă goală dacă nu se scrie nimic
+
+  const rx = new RegExp(escape(q), 'i');      // căutare case-insensitive
+  try {
+    const [artists, albums, songs] = await Promise.all([
+      Artist.find({ name:   rx }).limit(5),                    // max 5 rezultate / tip
+      Album.find ({ title:  rx }).limit(5).populate('artist'),
+      Song.find  ({ title:  rx }).limit(5).populate('artist')
+    ]);
+
+    //  normalizăm rezultatele într-un singur tablou
+    const results = [
+      ...artists.map(a => ({ type: 'artist', id: a._id,  text: a.name,            image: a.image })),
+      ...albums .map(a => ({ type: 'album',  id: a._id,  text: a.title,
+                             sub: a.artist?.name,         image: a.coverImage })),
+      ...songs  .map(s => ({ type: 'song',   id: s._id,   text: s.title,
+                             sub: s.artist?.name }))
+    ];
+
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 module.exports = router;

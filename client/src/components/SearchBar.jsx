@@ -1,74 +1,61 @@
-// SearchBar.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-function SearchBar() {
+export default function SearchBar() {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [timeoutId, setTimeoutId] = useState(null);
+  const [results, setResults] = useState([]);
+  const [focused, setFocused] = useState(false);
+  const timer = useRef(null);
+  const navigate = useNavigate();
 
+  // fetch cu debounce
   useEffect(() => {
-    // Funcție pentru a obține sugestii de la API
-    const fetchSuggestions = async (searchTerm) => {
+    if (timer.current) clearTimeout(timer.current);
+
+    if (!query.trim()) { setResults([]); return; }
+
+    timer.current = setTimeout(async () => {
       try {
-        const response = await axios.get(`/api/music/search?query=${searchTerm}`);
-        setSuggestions(response.data);    // presupunem că response.data este o listă de sugestii
+        const { data } = await axios.get(`/api/music/search`, { params: { q: query } });
+        setResults(data);
       } catch (err) {
-        console.error("Eroare la căutare:", err);
-        setSuggestions([]);               // în caz de eroare, resetăm sugestiile
+        console.error(err);
+        setResults([]);
       }
-    };
-
-    // Dacă nu există text, golim lista de sugestii și nu facem cerere
-    if (query.trim() === "") {
-      setSuggestions([]);
-      return;
-    }
-
-    // Debounce: așteptăm 300ms înainte de a face cererea, resetând timer-ul anterior
-    if (timeoutId) clearTimeout(timeoutId);
-    const newTimeoutId = setTimeout(() => {
-      fetchSuggestions(query);
     }, 300);
-    setTimeoutId(newTimeoutId);
 
-    // Curățăm timeout la demontare sau la schimbarea query
-    return () => clearTimeout(newTimeoutId);
+    return () => clearTimeout(timer.current);
   }, [query]);
 
-  // Gestionăm modificarea textului din input
-  const onChangeQuery = (e) => {
-    setQuery(e.target.value);
-  };
-
-  // (Opțional) Gestionăm clic pe o sugestie – de exemplu, navigare către pagina relevantă
-  const onSelectSuggestion = (suggestion) => {
-    // logica de navigare la ArtistDetail/AlbumDetail/SongDetail pe baza tipului sugestiei
-    // exemplu: navigate(`/${suggestion.type}/${suggestion.id}`)
-    console.log("Suggestion selected:", suggestion);
-    setQuery("");           // resetăm query după selecție
-    setSuggestions([]);
+  // navigare la click
+  const goTo = (item) => {
+    navigate(`/${item.type}/${item.id}`);
+    setQuery("");
+    setResults([]);
   };
 
   return (
-    <div className="search-bar">
+    <div style={styles.box}>
       <input
-        type="text"
-        placeholder="Căutare melodii, albume, artiști..."
+        style={styles.input}
         value={query}
-        onChange={onChangeQuery}
+        placeholder="Caută artiști, albume, piese..."
+        onChange={e => setQuery(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 150)} // lăsăm timp pentru click
       />
-      {suggestions.length > 0 && (
-        <ul className="suggestions-list">
-          {suggestions.map(item => (
-            <li
-              key={`${item.type}-${item.id}`}
-              onClick={() => onSelectSuggestion(item)}
-            >
-              {/* Afișăm sugestia cu contextul ei (artist/album/piesă) */}
-              {item.type === "artist" && <span>🎤 {item.name}</span>}
-              {item.type === "album" && <span>💿 {item.title} – {item.artistName}</span>}
-              {item.type === "song" && <span>🎵 {item.title} – {item.artistName}</span>}
+
+      {focused && results.length > 0 && (
+        <ul style={styles.list}>
+          {results.map(r => (
+            <li key={`${r.type}-${r.id}`} style={styles.item} onClick={() => goTo(r)}>
+              {r.image && <img src={r.image} alt="" style={styles.avatar} />}
+              <div>
+                <strong>{r.text}</strong>
+                {r.sub && <span style={styles.sub}> – {r.sub}</span>}
+                <span style={styles.badge}>{r.type}</span>
+              </div>
             </li>
           ))}
         </ul>
@@ -77,4 +64,18 @@ function SearchBar() {
   );
 }
 
-export default SearchBar;
+// stiluri inline minime
+const styles = {
+  box:   { position: "relative", maxWidth: 400, margin: "0 auto" },
+  input: { width: "100%", padding: "8px 12px", fontSize: 16 },
+  list:  { listStyle: "none", margin: 0, padding: 0,
+           position: "absolute", top: "100%", left: 0, right: 0,
+           background: "#fff", border: "1px solid #ccc", maxHeight: 300,
+           overflowY: "auto", zIndex: 5 },
+  item:  { padding: "6px 10px", display: "flex", alignItems: "center",
+           gap: 10, cursor: "pointer" },
+  avatar:{ width: 32, height: 32, objectFit: "cover", borderRadius: 4 },
+  sub:   { color: "#555", fontSize: 12 },
+  badge: { background: "#eee", borderRadius: 4, fontSize: 10, padding: "2px 4px",
+           marginLeft: 6, textTransform: "uppercase" }
+};

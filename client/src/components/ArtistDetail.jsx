@@ -1,4 +1,4 @@
-// ArtistDetail.jsx
+
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -7,14 +7,13 @@ import { useParams } from "react-router-dom";
 const artistCache = {};
 
 function ArtistDetail() {
-  const { id } = useParams();                      // ID-ul artistului din URL
+  const { id } = useParams();
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
-    // Dacă datele sunt în cache, le folosim și nu mai facem fetch
     if (artistCache[id]) {
       setArtist(artistCache[id]);
       setLoading(false);
@@ -25,7 +24,7 @@ function ArtistDetail() {
     axios.get(`/api/music/artists/${id}`)
       .then(response => {
         setArtist(response.data);
-        artistCache[id] = response.data;           // stocăm în cache
+        artistCache[id] = response.data;
       })
       .catch(err => {
         console.error("Eroare la preluarea artistului:", err);

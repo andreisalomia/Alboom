@@ -3,6 +3,7 @@ import Dashboard from "./Dashboard";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import MusicFeed from "./MusicFeed";
+import SearchBar from "./SearchBar";
 import VerifyCodeForm from "./VerifyCodeForm";
 import ChangePasswordForm from "./ChangePasswordForm";
 import { useEffect } from "react";
@@ -26,6 +27,7 @@ export default function HomePage({ user, onLogin, onLogout }) {
     return (
         <div style={{ textAlign: "center", paddingTop: "30px" }}>
             <h1>Welcome to Alboom</h1>
+            <SearchBar />
 
             {/* Login/Register */}
             {!user && !showLogin && !showRegister && (
