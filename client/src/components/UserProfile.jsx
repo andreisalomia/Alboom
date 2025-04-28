@@ -55,63 +55,61 @@ export default function UserProfile({ currentUser }) {
   }
 
   return (
-    <div className='page-content'>
-      <div className="profile-container">
-        <div className="profile-sidebar">
-          <div className="profile-info">
-            <div className="profile-avatar">
-              {userData?.name?.charAt(0).toUpperCase() || 'A'}
-            </div>
-            <h2 className="profile-name">{userData?.name || 'User Name'}</h2>
+    <div className="profile-container">
+      <div className="profile-sidebar">
+        <div className="profile-info">
+          <div className="profile-avatar">
+            {userData?.name?.charAt(0).toUpperCase() || 'A'}
           </div>
-          <nav className="profile-nav">
-            <button 
-              className={`nav-item ${currentPath === '' ? 'active' : ''}`}
-              onClick={() => navigateToSection('')}
-            >
-              Overview
-            </button>
-            <button 
-              className={`nav-item ${currentPath === 'playlists' ? 'active' : ''}`}
-              onClick={() => navigateToSection('playlists')}
-            >
-              Playlists
-            </button>
-            <button 
-              className={`nav-item ${currentPath === 'songs' ? 'active' : ''}`}
-              onClick={() => navigateToSection('songs')}
-            >
-              Favorite Songs
-            </button>
-            <button 
-              className={`nav-item ${currentPath === 'reviews' ? 'active' : ''}`}
-              onClick={() => navigateToSection('reviews')}
-            >
-              Reviews
-            </button>
-            {isOwnProfile && (
-              <button 
-                className={`nav-item at-bottom ${currentPath === 'settings' ? 'active' : ''}`}
-                onClick={() => navigateToSection('settings')}
-              >
-                Settings
-              </button>
-            )}
-          </nav>
+          <h2 className="profile-name">{userData?.name || 'User Name'}</h2>
         </div>
-        <div className="profile-content">
-          <div style={{ margin: "1.5rem" }}>
-            <ProfileContext.Provider value={{ userData, currentUser }}>
-              <Routes>
-                <Route path="" element={<ProfileOverview />} />
-                <Route path="playlists" element={<ProfilePlaylists />} />
-                <Route path="songs" element={<ProfileFavoriteSongs />} />
-                <Route path="settings" element={<ProfileSettings />} />
-                <Route path="*" element={<ProfileOverview />} />
-                { /*TODO: ruta pt reviews */ }
-              </Routes>
-            </ProfileContext.Provider>
-          </div>
+        <nav className="profile-nav">
+          <button 
+            className={`nav-item ${currentPath === '' ? 'active' : ''}`}
+            onClick={() => navigateToSection('')}
+          >
+            Overview
+          </button>
+          <button 
+            className={`nav-item ${currentPath === 'playlists' ? 'active' : ''}`}
+            onClick={() => navigateToSection('playlists')}
+          >
+            Playlists
+          </button>
+          <button 
+            className={`nav-item ${currentPath === 'songs' ? 'active' : ''}`}
+            onClick={() => navigateToSection('songs')}
+          >
+            Favorite Songs
+          </button>
+          <button 
+            className={`nav-item ${currentPath === 'reviews' ? 'active' : ''}`}
+            onClick={() => navigateToSection('reviews')}
+          >
+            Reviews
+          </button>
+          {isOwnProfile && (
+            <button 
+              className={`nav-item at-bottom ${currentPath === 'settings' ? 'active' : ''}`}
+              onClick={() => navigateToSection('settings')}
+            >
+              Settings
+            </button>
+          )}
+        </nav>
+      </div>
+      <div className="profile-content">
+        <div style={{ margin: "1.5rem" }}>
+          <ProfileContext.Provider value={{ userData, currentUser }}>
+            <Routes>
+              <Route path="" element={<ProfileOverview />} />
+              <Route path="playlists" element={<ProfilePlaylists />} />
+              <Route path="songs" element={<ProfileFavoriteSongs />} />
+              <Route path="settings" element={<ProfileSettings />} />
+              <Route path="*" element={<ProfileOverview />} />
+              { /*TODO: ruta pt reviews */ }
+            </Routes>
+          </ProfileContext.Provider>
         </div>
       </div>
     </div>
