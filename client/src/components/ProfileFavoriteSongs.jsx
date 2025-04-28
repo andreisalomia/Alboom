@@ -1,4 +1,4 @@
-export default function ProfileLikedSongs() {
+export default function ProfileFavoriteSongs() {
     return (
         <div>
             melodii

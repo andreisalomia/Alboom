@@ -47,6 +47,7 @@ export default function AlbumDetail() {
   const { _id, title, coverImage, artistName, genre, releaseDate, songs } = album;
 
   return (
+    <div className="page-content">
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{title}</h2>
 
@@ -87,6 +88,7 @@ export default function AlbumDetail() {
         targetId={_id}
         currentUser={currentUser}
       />
+    </div>
     </div>
   );
 }

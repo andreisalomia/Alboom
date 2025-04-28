@@ -1,0 +1,220 @@
+.overview-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.user-info h1 {
+  font-size: 2.5rem;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 700;
+}
+
+.join-date {
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.action-btn i {
+  font-size: 1.1rem;
+}
+
+.friend-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.friend-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.chat-btn {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.chat-btn:hover {
+  background-color: #bdc3c7;
+  transform: translateY(-2px);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0.5rem 0;
+}
+
+.stat-card h3 {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.favorites-section {
+  margin-top: 3rem;
+}
+
+.favorites-section h2 {
+  font-size: 1.8rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  font-weight: 700;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 2rem;
+}
+
+.favorite-item {
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.favorite-item:hover {
+  transform: translateY(-4px);
+}
+
+.artist-image-container {
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.favorite-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.favorite-item:hover img {
+  transform: scale(1.05);
+}
+
+.favorite-item p {
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.name-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-badge {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: badge-glow 2s ease-in-out infinite;
+}
+
+.role-badge.admin {
+  background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 8, 68, 0.4);
+}
+
+.role-badge.moderator {
+  background: linear-gradient(135deg, #4158D0 0%, #C850C0 100%);
+  color: white;
+  box-shadow: 0 0 15px rgba(65, 88, 208, 0.4);
+}
+
+.role-badge.user {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: #1a5c36;
+  box-shadow: 0 0 15px rgba(67, 233, 123, 0.4);
+}
+
+@keyframes badge-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(var(--glow-color), 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(var(--glow-color), 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(var(--glow-color), 0.2);
+  }
+}
+
+.role-badge.admin {
+  --glow-color: 255, 8, 68;
+}
+
+.role-badge.moderator {
+  --glow-color: 65, 88, 208;
+}
+
+.role-badge.user {
+  --glow-color: 67, 233, 123;
+}

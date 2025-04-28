@@ -66,6 +66,7 @@ export default function SongDetail() {
   const roundedAvg = Math.round(avgRating);
 
   return (
+    <div className="page-content">
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{title}</h2>
 
@@ -116,6 +117,7 @@ export default function SongDetail() {
         targetId={_id}
         currentUser={currentUser}
       />
+    </div>
     </div>
   );
 }
