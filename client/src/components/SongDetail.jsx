@@ -32,6 +32,7 @@ export default function SongDetail() {
   const { _id, title, artist, album, genre, duration } = song;
 
   return (
+    <div className="page-content">
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{title}</h2>
 
@@ -53,6 +54,7 @@ export default function SongDetail() {
         targetId={_id}
         currentUser={currentUser}
       />
+    </div>
     </div>
   );
 }

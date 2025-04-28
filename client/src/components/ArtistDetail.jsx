@@ -46,6 +46,7 @@ export default function ArtistDetail() {
   const { _id, name, image, biography, albums, songs } = artist;
 
   return (
+    <div className="page-detail">
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{name}</h2>
 
@@ -100,6 +101,7 @@ export default function ArtistDetail() {
         targetId={_id}
         currentUser={currentUser}
       />
+    </div>
     </div>
   );
 }
