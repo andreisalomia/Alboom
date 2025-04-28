@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -25,7 +26,7 @@ router.post('/register', async (req, res) => {
   if (exist) return res.status(409).json({ message: 'Email already exists' });
 
   const hashed = await bcrypt.hash(password, 10);
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6 cifre
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
   const user = await User.create({
     name,
@@ -62,7 +63,6 @@ router.post('/verify', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-
   const { email, password } = req.body;
   const user = await User.findOne({ email });
 
@@ -79,6 +79,56 @@ router.post('/login', async (req, res) => {
   );
 
   res.json({ token });
+});
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: 'No account with that email' });
+
+ 
+  const token = crypto.randomBytes(32).toString('hex');
+
+
+  user.resetPasswordCode    = token;
+  user.resetPasswordExpires = Date.now() + 1000 * 60 * 60; // 1 hour
+  await user.save();
+
+  
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+  await transporter.sendMail({
+    from: '"Alboom" <alboom.noreply@gmail.com>',
+    to: email,
+    subject: 'Reset your Alboom password',
+    html: `
+      <p>Hi ${user.name},</p>
+      <p>Click <a href="${resetUrl}">this link</a> to reset your password. It expires in one hour.</p>
+    `
+  });
+
+  res.json({ message: 'Password reset link sent to your email address.' });
+});
+
+router.post('/reset-password', async (req, res) => {
+  const { email, token, newPassword } = req.body;
+  const user = await User.findOne({ email });
+
+
+  if (
+    !user ||
+    user.resetPasswordCode !== token ||
+    Date.now() > user.resetPasswordExpires
+  ) {
+    return res.status(400).json({ message: 'Invalid or expired reset link' });
+  }
+
+ 
+  user.password             = await bcrypt.hash(newPassword, 10);
+  user.resetPasswordCode    = undefined;
+  user.resetPasswordExpires = undefined;
+  await user.save();
+
+  res.json({ message: 'Your password has been reset successfully.' });
 });
 
 router.post('/change-password', authMiddleware, async (req, res) => {
