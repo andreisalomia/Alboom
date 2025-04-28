@@ -34,27 +34,27 @@ router.get('/:userId', async (req, res) => {
 
     const playlists = await Playlist.find(playlistQuery).populate('songs');
 
-    const reviews = await Review.find({ author: req.params.userId })
-      .populate('author', 'name')
-      .populate({
-        path: 'targetId',
-        refPath: 'targetType'
-      })
-      .map(review => {
-        const reviewObj = review.toObject();
-        return {
-          ...reviewObj,
-          score: reviewObj.upvotes.length - reviewObj.downvotes.length,
-          upvotes: undefined,
-          downvotes: undefined
-        };
-      });
+    // const reviews = await Review.find({ author: req.params.userId })
+    //   .populate('author', 'name')
+    //   .populate({
+    //     path: 'targetId',
+    //     refPath: 'targetType'
+    //   })
+    //   .map(review => {
+    //     const reviewObj = review.toObject();
+    //     return {
+    //       ...reviewObj,
+    //       score: reviewObj.upvotes.length - reviewObj.downvotes.length,
+    //       upvotes: undefined,
+    //       downvotes: undefined
+    //     };
+    //   });
       // da doar diferenta de voturi
 
     res.json({
       ...user.toObject(),
       playlists,
-      reviews
+      // reviews
     });
 
   } catch (err) {

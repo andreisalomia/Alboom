@@ -4,10 +4,6 @@ body {
   background-color: #f0f2f5;
 }
 
-.page-content {
-  padding-top: 4.5rem; /* Înălțimea navbarului */
-}
-
 html, body {
   height: 100%;
 }
