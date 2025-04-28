@@ -4,7 +4,9 @@ const User = require('../models/User');
 const Playlist = require('../models/Playlist');
 const authMiddleware = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
+const Review = require('../models/Review');
 
+// informatii basic pentru profile overview, informatii mai detaliate in alte rute
 router.get('/:userId', async (req, res) => {
   try {
     const requestingUserId = req.headers.authorization ? 
@@ -13,7 +15,7 @@ router.get('/:userId', async (req, res) => {
 
     const selectFields = requestingUserId === req.params.userId
       ? '-password -verified -verificationCode'
-      : '-password -verified -verificationCode -email -notifications';
+      : '-password -verified -verificationCode -email';
 
     const user = await User.findById(req.params.userId)
       .select(selectFields)
@@ -32,10 +34,27 @@ router.get('/:userId', async (req, res) => {
 
     const playlists = await Playlist.find(playlistQuery).populate('songs');
 
+    const reviews = await Review.find({ author: req.params.userId })
+      .populate('author', 'name')
+      .populate({
+        path: 'targetId',
+        refPath: 'targetType'
+      })
+      .map(review => {
+        const reviewObj = review.toObject();
+        return {
+          ...reviewObj,
+          score: reviewObj.upvotes.length - reviewObj.downvotes.length,
+          upvotes: undefined,
+          downvotes: undefined
+        };
+      });
+      // da doar diferenta de voturi
+
     res.json({
       ...user.toObject(),
       playlists,
-      isOwnProfile: requestingUserId === req.params.userId
+      reviews
     });
 
   } catch (err) {
