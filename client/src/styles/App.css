@@ -37,3 +37,9 @@ form {
   width: fit-content;
 }
 
+.album-detail ol {
+  display: inline-block;  /* shrink-wrap to content */
+  text-align: left;        /* keep numbers & titles left-aligned */
+  margin: 1rem 0;          /* optional spacing */
+  padding-left: 1.25rem;   /* preserve the default indent for numbers */
+}
