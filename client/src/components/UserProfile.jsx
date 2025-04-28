@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import axios from "axios";
-import { Routes, Route, Link, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import '../styles/UserProfile.css';
 import ProfileOverview from './ProfileOverview';
 import ProfilePlaylists from './ProfilePlaylists';
