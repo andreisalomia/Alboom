@@ -19,7 +19,7 @@ app.use('/api/music', require('./routes/music'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/comments', require('./routes/comments'));
-
+app.use('/api/reviews', require('./routes/reviews'));
 
 
 // 🟥 NU pune nimic mai jos de .listen() !!!

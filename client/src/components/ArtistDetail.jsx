@@ -1,9 +1,10 @@
 // client/src/components/ArtistDetail.jsx
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import ReviewSection from "./ReviewSection";
 import CommentSection from "./CommentSection";
 
 // simple in-memory cache for artists
@@ -11,10 +12,11 @@ const artistCache = {};
 
 export default function ArtistDetail() {
   const { id } = useParams();
-  const [artist, setArtist] = useState(null);
+  const [artist, setArtist]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError]     = useState(false);
 
+  // decode current user from JWT (if any)
   let currentUser = null;
   try {
     const token = localStorage.getItem("token");
@@ -29,9 +31,8 @@ export default function ArtistDetail() {
       return;
     }
     setLoading(true);
-    setError(false);
-
-    axios.get(`/api/music/artists/${id}`)
+    axios
+      .get(`/api/music/artists/${id}`)
       .then(res => {
         artistCache[id] = res.data;
         setArtist(res.data);
@@ -49,6 +50,9 @@ export default function ArtistDetail() {
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h2>{name}</h2>
 
+      {/* ★★ Average & interactive review ★★ */}
+      <ReviewSection targetType="artist" targetId={_id} />
+
       {image && (
         <img
           src={image}
@@ -56,10 +60,7 @@ export default function ArtistDetail() {
           style={{ maxWidth: 300, margin: "1rem 0" }}
         />
       )}
-
-      <p style={{ maxWidth: 600, margin: "0.5rem auto" }}>
-        {biography}
-      </p>
+      <p style={{ maxWidth: 600, margin: "0.5rem auto" }}>{biography}</p>
 
       <h3 style={{ marginTop: "2rem" }}>Albume:</h3>
       <ul
@@ -71,9 +72,9 @@ export default function ArtistDetail() {
           textAlign: "center"
         }}
       >
-        {albums?.map(album => (
-          <li key={album.id} style={{ margin: "0.25rem 0" }}>
-            {album.title}
+        {albums.map(a => (
+          <li key={a.id} style={{ margin: "0.25rem 0" }}>
+            {a.title}
           </li>
         ))}
       </ul>
@@ -88,13 +89,14 @@ export default function ArtistDetail() {
           textAlign: "center"
         }}
       >
-        {songs?.map(song => (
-          <li key={song.id} style={{ margin: "0.25rem 0" }}>
-            {song.title}
+        {songs.map(s => (
+          <li key={s.id} style={{ margin: "0.25rem 0" }}>
+            {s.title}
           </li>
         ))}
       </ul>
 
+      {/* Comments (left-aligned, write box above) */}
       <CommentSection
         targetType="artist"
         targetId={_id}
