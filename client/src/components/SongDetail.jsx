@@ -93,7 +93,7 @@ export default function SongDetail() {
       <p><strong>Artist:</strong> {artist?.name || "—"}</p>
       {album && <p><strong>Album:</strong> {album.title}</p>}
       <p><strong>Gen:</strong> {genre}</p>
-      <p><strong>Durată:</strong> {formatDur(duration)}</p>
+      <p><strong>Duration:</strong> {formatDur(duration)}</p>
 
       {/* 🌟 Your Rating (interactive, gold stars) */}
       <div style={{ margin: "1rem 0" }}>
