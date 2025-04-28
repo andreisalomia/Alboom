@@ -21,7 +21,6 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/reviews', require('./routes/reviews'));
 
-
 // 🟥 NU pune nimic mai jos de .listen() !!!
 app.listen(process.env.PORT, () => {
   console.log(`Server on http://localhost:${process.env.PORT}`);
