@@ -55,6 +55,7 @@ export default function UserProfile({ currentUser }) {
   }
 
   return (
+    <div className='page-content'>
     <div className="profile-container">
       <div className="profile-sidebar">
         <div className="profile-info">
@@ -97,6 +98,7 @@ export default function UserProfile({ currentUser }) {
 						</button>
 					)}
         </nav>
+      </div>
       </div>
       <div className="profile-content">
 				<div style={{ margin: "1.5rem" }}>

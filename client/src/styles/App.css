@@ -4,6 +4,10 @@ body {
   background-color: #f0f2f5;
 }
 
+.page-content {
+  padding-top: 4.5rem; /* Înălțimea navbarului */
+}
+
 html, body {
   height: 100%;
 }
@@ -37,3 +41,9 @@ form {
   width: fit-content;
 }
 
+.album-detail ol {
+  display: inline-block;  /* shrink-wrap to content */
+  text-align: left;        /* keep numbers & titles left-aligned */
+  margin: 1rem 0;          /* optional spacing */
+  padding-left: 1.25rem;   /* preserve the default indent for numbers */
+}
