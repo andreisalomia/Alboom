@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   profileImage: String,
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   favoriteArtists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Artist' }],
+  favoriteAlbums: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Album' }],
+  favoriteSongs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Song' }],
   notifications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }]
 }, { timestamps: true });
 

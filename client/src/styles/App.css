@@ -4,6 +4,10 @@ body {
   background-color: #f0f2f5;
 }
 
+html, body {
+  height: 100%;
+}
+
 .App {
   text-align: center;
 }

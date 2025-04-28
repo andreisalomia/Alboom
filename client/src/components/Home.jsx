@@ -25,7 +25,7 @@ export default function HomePage({ user, onLogin, onLogout }) {
     };
 
     return (
-        <div style={{ textAlign: "center", paddingTop: "1rem" }}>
+        <div style={{ textAlign: "center", paddingTop: "1rem", paddingBottom: "1rem" }}>
             <h1>Welcome to Alboom</h1>
             <SearchBar />
 

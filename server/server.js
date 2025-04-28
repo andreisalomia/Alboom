@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const User = require('./models/User')
 const listEndpoints = require('express-list-endpoints');
 require('dotenv').config({ path: __dirname + '/.env' });
 
@@ -16,6 +17,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/music', require('./routes/music'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/users', require('./routes/users'));
+
 
 // 🟥 NU pune nimic mai jos de .listen() !!!
 app.listen(process.env.PORT, () => {

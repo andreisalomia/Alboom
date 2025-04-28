@@ -1,8 +1,9 @@
 .profile-container {
   display: flex;
   gap: 2rem;
-  padding: 2rem;
-  height: 70vh;
+  margin: 2rem;
+  /* ca sa fie simetric sus-jos 4.5rem navbar si 4rem margin sus si jos de la container asta */ 
+  height: calc(100vh - 4.5rem - 4rem);
 }
 
 .profile-sidebar {
@@ -51,6 +52,7 @@
   flex-direction: column;
   gap: 0.25rem;
   height: 100%;
+  overflow: auto;
 }
 
 .nav-item {
@@ -84,4 +86,5 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   height: 100%;
+  overflow: auto;
 }
