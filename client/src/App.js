@@ -52,7 +52,7 @@ function App() {
 
   return (
     <div className="App">
-      <Navbar user={userInfo} />
+      <Navbar user={userInfo} onLogout={handleLogout}/>
 
       <Routes>
         <Route

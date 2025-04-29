@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import "../styles/Navbar.css";
 
-export default function Navbar({ user }) {
+export default function Navbar({ user, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function Navbar({ user }) {
           <Link to="/" className="navbar-logo">Alboom</Link>
         </div>
         <div className="navbar-right">
-          <button onClick={() => setMenuOpen(true)} className="hamburger-button">
+          <button onClick={() => setMenuOpen(!menuOpen)} className="hamburger-button">
             <Menu size={32} />
           </button>
         </div>
@@ -66,7 +66,7 @@ export default function Navbar({ user }) {
                 ) : (
                   <>
                     <Link to={`/profile/${user.id}`} onClick={() => setMenuOpen(false)}>Profile</Link>
-                    <button onClick={() => setMenuOpen(false)} className="logout-button">
+                    <button onClick={() => { setMenuOpen(false); onLogout(); }} className="logout-button">
                       Logout
                     </button>
                   </>
