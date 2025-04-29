@@ -7,19 +7,10 @@ import ProfilePlaylists from './ProfilePlaylists';
 import ProfileFavoriteSongs from './ProfileFavoriteSongs';
 import ProfileSettings from './ProfileSettings';
 import { useAuth } from "../contexts/AuthContext";
-
-const ProfileContext = createContext(null);
-
-export const useProfile = () => {
-  const context = useContext(ProfileContext);
-  if (!context) {
-    throw new Error('asta trb sa fie folosita in UserProfile');
-  }
-  return context;
-};
+import { ProfileProvider } from "../contexts/ProfileContext";
 
 export default function UserProfile() {
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
   const [invalidUser, setInvalidUser] = useState(false);
   const navigate = useNavigate();
@@ -61,7 +52,7 @@ export default function UserProfile() {
       <div className="profile-sidebar">
         <div className="profile-info">
           <div className="profile-avatar">
-            {userData?.name?.charAt(0).toUpperCase() || 'A'}
+            {userData?.name?.charAt(0).toUpperCase() || '?'}
           </div>
           <h2 className="profile-name">{userData?.name || 'User Name'}</h2>
         </div>
@@ -102,7 +93,7 @@ export default function UserProfile() {
       </div>
       <div className="profile-content">
         <div style={{ margin: "1.5rem" }}>
-          <ProfileContext.Provider value={{ userData, currentUser }}>
+          <ProfileProvider value={{ userData, currentUser }}>
             <Routes>
               <Route path="" element={<ProfileOverview />} />
               <Route path="playlists" element={<ProfilePlaylists />} />
@@ -111,7 +102,7 @@ export default function UserProfile() {
               <Route path="*" element={<ProfileOverview />} />
               { /*TODO: ruta pt reviews */ }
             </Routes>
-          </ProfileContext.Provider>
+          </ProfileProvider>
         </div>
       </div>
     </div>

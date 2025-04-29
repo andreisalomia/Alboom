@@ -1,4 +1,4 @@
-import { useProfile } from './UserProfile';
+import { useProfile } from '../contexts/ProfileContext';
 import '../styles/ProfileOverview.css';
 
 export default function ProfileOverview() {
