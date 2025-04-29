@@ -35,8 +35,9 @@ function RegisterPage() {
   return <VerifyCodeForm email={email} onVerified={() => navigate('/login')} />;
 }
 
+// gen folosim useAuth() in componente si chestii ca sa nu trimiti mereu userInfo ca e urat
+// vezi in contexts/authcontext 
 function App() {
-
   return (
     <AuthProvider>
       <div className="App">
