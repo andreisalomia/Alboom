@@ -1,6 +1,7 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, createContext, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 import Navbar from './components/Navbar';
 import HomePage from './components/Home';
@@ -13,10 +14,11 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import VerifyCodeForm from './components/VerifyCodeForm';
 
-function LoginPage({ onLogin }) {
+function LoginPage() {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const handleSuccess = () => {
-    onLogin();
+    login();
     navigate('/');
   };
   return <LoginForm onLogin={handleSuccess} />;
@@ -34,50 +36,33 @@ function RegisterPage() {
 }
 
 function App() {
-  const token = localStorage.getItem('token');
-  const [userInfo, setUserInfo] = useState(() => {
-    try { return token ? jwtDecode(token) : null; }
-    catch { return null; }
-  });
-
-  const handleLogin = () => {
-    const newToken = localStorage.getItem('token');
-    setUserInfo(jwtDecode(newToken));
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setUserInfo(null);
-  };
 
   return (
-    <div className="App">
-      <Navbar user={userInfo} onLogout={handleLogout}/>
+    <AuthProvider>
+      <div className="App">
+        <Navbar/>
 
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <HomePage
-              user={userInfo}
-              onLogin={handleLogin}
-              onLogout={handleLogout}
-            />
-          }
-        />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <HomePage />
+            }
+          />
 
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/reset-password" element={<ResetPasswordForm />} />
-        <Route path="/song/:id" element={<SongDetail />} />
-        <Route path="/album/:id" element={<AlbumDetail />} />
-        <Route path="/artist/:id" element={<ArtistDetail />} />
-        <Route
-          path="/profile/:userId/*"
-          element={<UserProfile currentUser={userInfo} />}
-        />
-      </Routes>
-    </div>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
+          <Route path="/song/:id" element={<SongDetail />} />
+          <Route path="/album/:id" element={<AlbumDetail />} />
+          <Route path="/artist/:id" element={<ArtistDetail />} />
+          <Route
+            path="/profile/:userId/*"
+            element={<UserProfile />}
+          />
+        </Routes>
+      </div>
+    </AuthProvider>
   );
 }
 

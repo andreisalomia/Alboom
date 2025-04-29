@@ -3,9 +3,11 @@ import { useState } from "react";
 import AddArtistModal from "./AddArtistModal";
 import AddAlbumModal from "./AddAlbumModal";
 import AddSongModal from "./AddSongModal";
+import { useAuth } from "../contexts/AuthContext";
 
-export default function Dashboard({ user, onLogout, onRefresh }) {
+export default function Dashboard({ onRefresh }) {
     const [modal, setModal] = useState(null); // 'song' | 'album' | 'artist' | null
+    const { user } = useAuth();
 
     const closeModal = () => setModal(null);
 

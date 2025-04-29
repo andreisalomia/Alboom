@@ -6,6 +6,7 @@ import ProfileOverview from './ProfileOverview';
 import ProfilePlaylists from './ProfilePlaylists';
 import ProfileFavoriteSongs from './ProfileFavoriteSongs';
 import ProfileSettings from './ProfileSettings';
+import { useAuth } from "../contexts/AuthContext";
 
 const ProfileContext = createContext(null);
 
@@ -17,7 +18,8 @@ export const useProfile = () => {
   return context;
 };
 
-export default function UserProfile({ currentUser }) {
+export default function UserProfile() {
+  const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
   const [invalidUser, setInvalidUser] = useState(false);
   const navigate = useNavigate();

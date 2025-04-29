@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { useAuth } from '../contexts/AuthContext';
 import Dashboard from "./Dashboard";
 import MusicFeed from "./MusicFeed";
 import SearchBar from "./SearchBar";
 import ChangePasswordForm from "./ChangePasswordForm";
 
-export default function HomePage({ user, onLogin, onLogout }) {
+export default function HomePage() {
   const [refreshFeed, setRefreshFeed] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const { user, login, logout } = useAuth();
 
   useEffect(() => {
     setShowChangePassword(false);
@@ -30,7 +32,7 @@ export default function HomePage({ user, onLogin, onLogout }) {
       {user && (
         <div style={{ margin: "1rem 0" }}>
           <p>Logged in as {user.name} ({user.role})</p>
-          <button onClick={onLogout}>Logout</button>
+          <button onClick={logout}>Logout</button>
           <button onClick={() => setShowChangePassword(true)}>
             Change Password
           </button>
@@ -41,11 +43,7 @@ export default function HomePage({ user, onLogin, onLogout }) {
       )}
 
       {user?.role === "admin" && (
-        <Dashboard
-          user={user}
-          onLogout={onLogout}
-          onRefresh={triggerRefresh}
-        />
+        <Dashboard onRefresh={triggerRefresh}/>
       )}
 
       <div style={{ marginTop: "3rem" }}>

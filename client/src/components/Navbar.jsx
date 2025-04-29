@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import "../styles/Navbar.css";
 
-export default function Navbar({ user, onLogout }) {
+export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "auto";
@@ -66,7 +68,7 @@ export default function Navbar({ user, onLogout }) {
                 ) : (
                   <>
                     <Link to={`/profile/${user.id}`} onClick={() => setMenuOpen(false)}>Profile</Link>
-                    <button onClick={() => { setMenuOpen(false); onLogout(); }} className="logout-button">
+                    <button onClick={() => { setMenuOpen(false); logout() }} className="logout-button">
                       Logout
                     </button>
                   </>
