@@ -30,7 +30,8 @@ export default function SearchBar() {
 
   // navigare la click
   const goTo = (item) => {
-    navigate(`/${item.type}/${item.id}`);
+    const route = item.type === 'user' ? `/profile/${item.id}` : `/${item.type}/${item.id}`;
+    navigate(route);
     setQuery("");
     setResults([]);
   };
@@ -40,7 +41,7 @@ export default function SearchBar() {
       <input
         style={styles.input}
         value={query}
-        placeholder="Caută artiști, albume, piese..."
+        placeholder="Caută artiști, albume, piese, utilizatori..."
         onChange={e => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)} // lăsăm timp pentru click

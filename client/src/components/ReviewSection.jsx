@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getReviews, toggleReview } from '../api/reviews';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 export default function ReviewSection({ targetType, targetId }) {
   const [reviews, setReviews]       = useState([]);
   const [userRating, setUserRating] = useState(0);
   const [avgRating, setAvgRating]   = useState(0);
   const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
 
   // load current user from token
   useEffect(() => {
@@ -72,6 +74,20 @@ export default function ReviewSection({ targetType, targetId }) {
               margin: '0 3px'
             }}
           >★</span>
+        ))}
+      </div>
+
+      {/* Author info */}
+      <div style={{ marginTop: '1rem' }}>
+        {reviews.map((r) => (
+          <div key={r._id}>
+            <strong
+              onClick={() => navigate(`/profile/${r.author._id}`)}
+              style={{ cursor: 'pointer', color: '#007bff' }}
+            >
+              {r.author.name}
+            </strong>: {r.rating}★
+          </div>
         ))}
       </div>
     </div>

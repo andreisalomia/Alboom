@@ -2,6 +2,7 @@ const express = require('express');
 const Artist = require('../models/Artist');
 const Album = require('../models/Album');
 const Song = require('../models/Song');
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -86,23 +87,43 @@ const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');   // scăpăm rege
 
 router.get('/search', async (req, res) => {
   const q = (req.query.q || '').trim();
-  if (!q) return res.json([]);                // întoarcem listă goală dacă nu se scrie nimic
+  if (!q) return res.json([]); // întoarcem listă goală dacă nu se scrie nimic
 
-  const rx = new RegExp(escape(q), 'i');      // căutare case-insensitive
+  const rx = new RegExp(escape(q), 'i');
+
   try {
-    const [artists, albums, songs] = await Promise.all([
-      Artist.find({ name:   rx }).limit(5),                    // max 5 rezultate / tip
-      Album.find ({ title:  rx }).limit(5).populate('artist'),
-      Song.find  ({ title:  rx }).limit(5).populate('artist')
+    const [users, artists, albums, songs] = await Promise.all([
+      User.find({ name: rx }).limit(5),
+      Artist.find({ name: rx }).limit(5),
+      Album.find({ title: rx }).limit(5).populate('artist'),
+      Song.find({ title: rx }).limit(5).populate('artist')
     ]);
 
-    //  normalizăm rezultatele într-un singur tablou
     const results = [
-      ...artists.map(a => ({ type: 'artist', id: a._id,  text: a.name,            image: a.image })),
-      ...albums .map(a => ({ type: 'album',  id: a._id,  text: a.title,
-                             sub: a.artist?.name,         image: a.coverImage })),
-      ...songs  .map(s => ({ type: 'song',   id: s._id,   text: s.title,
-                             sub: s.artist?.name }))
+      ...users.map(u => ({
+        type: 'profile',           // pentru a fi compatibil cu `SearchBar`
+        id: u._id,
+        text: u.name
+      })),
+      ...artists.map(a => ({
+        type: 'artist',
+        id: a._id,
+        text: a.name,
+        image: a.image
+      })),
+      ...albums.map(a => ({
+        type: 'album',
+        id: a._id,
+        text: a.title,
+        sub: a.artist?.name,
+        image: a.coverImage
+      })),
+      ...songs.map(s => ({
+        type: 'song',
+        id: s._id,
+        text: s.title,
+        sub: s.artist?.name
+      }))
     ];
 
     res.json(results);
@@ -111,6 +132,7 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
 
 
 module.exports = router;

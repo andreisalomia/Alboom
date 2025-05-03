@@ -6,7 +6,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const Review = require('../models/Review');
 
-// informatii basic pentru profile overview, informatii mai detaliate in alte rute
 router.get('/:userId', async (req, res) => {
   try {
     const requestingUserId = req.headers.authorization ? 
@@ -17,11 +16,14 @@ router.get('/:userId', async (req, res) => {
       ? '-password -verified -verificationCode'
       : '-password -verified -verificationCode -email';
 
-    const user = await User.findById(req.params.userId)
+      const user = await User.findById(req.params.userId)
       .select(selectFields)
       .populate('favoriteArtists')
       .populate('favoriteAlbums')
-      .populate('favoriteSongs');
+      .populate('favoriteSongs')
+      .populate('friends', 'name')
+      .populate('friendRequestsReceived', 'name');
+    
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -50,7 +52,6 @@ router.get('/:userId', async (req, res) => {
           downvotes: undefined
         };
       });
-      // da doar diferenta de voturi
 
     res.json({
       ...user.toObject(),
@@ -62,5 +63,81 @@ router.get('/:userId', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+
+router.get('/:userId/friend-status', authMiddleware, async (req, res) => {
+  const me = req.user.id;
+  const target = req.params.userId;
+
+  if (me === target) return res.json({ status: 'self' });
+
+  const user = await User.findById(me);
+
+  if (user.friends.includes(target)) return res.json({ status: 'friends' });
+  if (user.friendRequestsSent.includes(target)) return res.json({ status: 'sent' });
+  if (user.friendRequestsReceived.includes(target)) return res.json({ status: 'received' });
+
+  res.json({ status: 'none' });
+});
+
+router.post('/:userId/friends', authMiddleware, async (req, res) => {
+  const me = req.user.id;
+  const target = req.params.userId;
+
+  if (me === target) return res.status(400).json({ message: 'You cannot friend yourself' });
+
+  const [user, other] = await Promise.all([
+    User.findById(me),
+    User.findById(target)
+  ]);
+
+  if (user.friends.includes(target)) return res.json({ message: 'Already friends' });
+
+  if (user.friendRequestsReceived.includes(target)) {
+    user.friendRequestsReceived = user.friendRequestsReceived.filter(id => id.toString() !== target);
+    other.friendRequestsSent = other.friendRequestsSent.filter(id => id.toString() !== me);
+
+    user.friends.push(target);
+    other.friends.push(me);
+
+    await user.save();
+    await other.save();
+
+    return res.json({ message: 'Friend request accepted' });
+  }
+
+  if (!user.friendRequestsSent.includes(target)) {
+    user.friendRequestsSent.push(target);
+    other.friendRequestsReceived.push(me);
+
+    await user.save();
+    await other.save();
+  }
+
+  res.json({ message: 'Friend request sent' });
+});
+
+router.delete('/:userId/friends', authMiddleware, async (req, res) => {
+  const me = req.user.id;
+  const target = req.params.userId;
+
+  const [user, other] = await Promise.all([
+    User.findById(me),
+    User.findById(target)
+  ]);
+
+  user.friends = user.friends.filter(id => id.toString() !== target);
+  other.friends = other.friends.filter(id => id.toString() !== me);
+
+  user.friendRequestsSent = user.friendRequestsSent.filter(id => id.toString() !== target);
+  user.friendRequestsReceived = user.friendRequestsReceived.filter(id => id.toString() !== target);
+  other.friendRequestsSent = other.friendRequestsSent.filter(id => id.toString() !== me);
+  other.friendRequestsReceived = other.friendRequestsReceived.filter(id => id.toString() !== me);
+
+  await user.save();
+  await other.save();
+
+  res.json({ message: 'Friend removed or request canceled' });
+});
+
 
 module.exports = router;

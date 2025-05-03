@@ -8,11 +8,13 @@ import {
   likeComment,
   dislikeComment
 } from '../api/comments';
+import { useNavigate } from 'react-router-dom';
 
 export default function CommentSection({ targetType, targetId, currentUser }) {
   const [comments, setComments] = useState([]);
   const [newContent, setNewContent] = useState('');
   const [replyTo, setReplyTo] = useState(null);
+  const navigate = useNavigate();
 
   const load = () =>
     getComments(targetType, targetId).then(res => setComments(res.data));
@@ -58,7 +60,12 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
         padding: '8px 0'
       }}
     >
-      <strong>{c.author.name}</strong> &middot; {new Date(c.createdAt).toLocaleString()}
+      <strong
+        onClick={() => navigate(`/profile/${c.author._id}`)}
+        style={{ cursor: 'pointer', color: '#007bff' }}
+      >
+        {c.author.name}
+      </strong> &middot; {new Date(c.createdAt).toLocaleString()}
       <p style={{ margin: '4px 0' }}>{c.content}</p>
       <small>
         👍 {c.likes.length} &nbsp; 👎 {c.dislikes.length}

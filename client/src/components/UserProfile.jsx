@@ -1,11 +1,15 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+
 import '../styles/UserProfile.css';
+
 import ProfileOverview from './ProfileOverview';
 import ProfilePlaylists from './ProfilePlaylists';
 import ProfileFavoriteSongs from './ProfileFavoriteSongs';
 import ProfileSettings from './ProfileSettings';
+import ProfileFriends from './ProfileFriends';
+
 import { useAuth } from "../contexts/AuthContext";
 import { ProfileProvider } from "../contexts/ProfileContext";
 
@@ -13,6 +17,7 @@ export default function UserProfile() {
   const { user: currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
   const [invalidUser, setInvalidUser] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { userId } = useParams();
@@ -21,16 +26,12 @@ export default function UserProfile() {
   const isOwnProfile = userId === currentUser?.id;
 
   useEffect(() => {
-    const userDataResponse = axios.get(`/api/users/${userId}`);
-
-    userDataResponse
+    axios.get(`/api/users/${userId}`)
       .then(({ data }) => {
         setUserData(data);
         setInvalidUser(false);
       })
-      .catch((error) => {
-        setInvalidUser(true);
-      });
+      .catch(() => setInvalidUser(true));
   }, [userId]);
 
   const navigateToSection = (section) => {
@@ -44,7 +45,7 @@ export default function UserProfile() {
         <p>The user you're looking for doesn't exist.</p>
         <button onClick={() => navigate('/')}>Go back home</button>
       </div>
-    )
+    );
   }
 
   return (
@@ -56,6 +57,7 @@ export default function UserProfile() {
           </div>
           <h2 className="profile-name">{userData?.name || 'User Name'}</h2>
         </div>
+
         <nav className="profile-nav">
           <button 
             className={`nav-item ${currentPath === '' ? 'active' : ''}`}
@@ -76,11 +78,18 @@ export default function UserProfile() {
             Favorite Songs
           </button>
           <button 
+            className={`nav-item ${currentPath === 'friends' ? 'active' : ''}`}
+            onClick={() => navigateToSection('friends')}
+          >
+            Friends
+          </button>
+          {/* Poți activa când ai date */}
+          {/* <button 
             className={`nav-item ${currentPath === 'reviews' ? 'active' : ''}`}
             onClick={() => navigateToSection('reviews')}
           >
             Reviews
-          </button>
+          </button> */}
           {isOwnProfile && (
             <button 
               className={`nav-item at-bottom ${currentPath === 'settings' ? 'active' : ''}`}
@@ -91,6 +100,7 @@ export default function UserProfile() {
           )}
         </nav>
       </div>
+
       <div className="profile-content">
         <div style={{ margin: "1.5rem" }}>
           <ProfileProvider value={{ userData, currentUser }}>
@@ -98,9 +108,9 @@ export default function UserProfile() {
               <Route path="" element={<ProfileOverview />} />
               <Route path="playlists" element={<ProfilePlaylists />} />
               <Route path="songs" element={<ProfileFavoriteSongs />} />
+              <Route path="friends" element={<ProfileFriends />} />
               <Route path="settings" element={<ProfileSettings />} />
               <Route path="*" element={<ProfileOverview />} />
-              { /*TODO: ruta pt reviews */ }
             </Routes>
           </ProfileProvider>
         </div>
