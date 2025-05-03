@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useProfile } from "../contexts/ProfileContext";
 import "../styles/ProfileOverview.css";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileOverview() {
     const { userData, currentUser } = useProfile();
     const isOwnProfile = userData?._id === currentUser?.id;
+    const navigate = useNavigate();
 
     const [friendStatus, setFriendStatus] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -196,7 +198,12 @@ export default function ProfileOverview() {
                 {!isOwnProfile && (
                     <div className="action-buttons">
                         {renderFriendAction()}
-                        <button className="action-btn chat-btn">
+                        <button
+                            className="action-btn chat-btn"
+                            onClick={() =>
+                                navigate(`/messages/${userData._id}`)
+                            }
+                        >
                             <i className="fas fa-comment-alt"></i>
                             Message
                         </button>

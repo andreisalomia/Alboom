@@ -13,6 +13,7 @@ import ResetPasswordForm from './components/ResetPasswordForm';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import VerifyCodeForm from './components/VerifyCodeForm';
+import MessagesPage from './components/MessagesPage';
 
 function LoginPage() {
   const { login } = useAuth();
@@ -57,6 +58,8 @@ function App() {
           <Route path="/song/:id" element={<SongDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/artist/:id" element={<ArtistDetail />} />
+          <Route path="/messages/:userId?" element={<MessagesPage />} />
+
           <Route
             path="/profile/:userId/*"
             element={<UserProfile />}
