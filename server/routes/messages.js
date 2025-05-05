@@ -91,9 +91,14 @@ router.post('/', auth, async (req, res) => {
     content
   });
 
+  await message.populate("sender", "name");
+
   const io = req.app.locals.io;
   if (io) {
-    io.to(recipientId).emit('private_message', message);
+    io.to(recipientId).emit('receive_message', {
+      ...message.toObject(),
+      senderName: message.sender.name  // 🔥 Add senderName
+    });
   }
 
   res.status(201).json(message);

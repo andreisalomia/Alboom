@@ -2,6 +2,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useState, createContext, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 import MessagesOverview from './components/MessagesOverview';
 import Navbar from './components/Navbar';
@@ -15,6 +16,8 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import VerifyCodeForm from './components/VerifyCodeForm';
 import MessagesPage from './components/MessagesPage';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function LoginPage() {
   const { login } = useAuth();
@@ -42,6 +45,8 @@ function RegisterPage() {
 function App() {
   return (
     <AuthProvider>
+      <NotificationProvider>
+      <ToastContainer position='bottom-right' autoClose={3000} />
       <div className="App">
         <Navbar/>
 
@@ -68,6 +73,7 @@ function App() {
           />
         </Routes>
       </div>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

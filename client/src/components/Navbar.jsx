@@ -4,10 +4,23 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import "../styles/Navbar.css";
+import { useNotifications } from "../contexts/NotificationContext";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { notifications } = useNotifications();
+
+  useEffect(() => {
+    const primeAudio = () => {
+      const audio = new Audio("/notification.mp3");
+      audio.play().catch(() => {}); // expected to fail, but primes it
+      document.removeEventListener("click", primeAudio);
+    };
+  
+    document.addEventListener("click", primeAudio);
+  }, []);
+
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "auto";
@@ -68,7 +81,23 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link to={`/profile/${user.id}`} onClick={() => setMenuOpen(false)}>Profile</Link>
-                    <Link to="/messages" onClick={() => setMenuOpen(false)}>Messages</Link>
+                    <Link to="/messages" onClick={() => setMenuOpen(false)} style={{ position: "relative" }}>
+                      Messages
+                      {notifications.length > 0 && (
+                        <span style={{
+                        position: "absolute",
+                        top: -5,
+                        right: -10,
+                        background: "red",
+                        color: "white",
+                        borderRadius: "50%",
+                        padding: "2px 6px",
+                        fontSize: "0.75rem"
+                        }}>
+                          {notifications.length}
+                    </span>
+                      )}
+                    </Link>
                     <button onClick={() => { setMenuOpen(false); logout() }} className="logout-button">
                       Logout
                     </button>

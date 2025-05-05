@@ -28,11 +28,7 @@ io.on('connection', (socket) => {
   });
 
   // Mesaj privat trimis prin socket (opțional - fallback la REST)
-  socket.on('send_message', (msg) => {
-    io.to(msg.recipient).emit('receive_message', msg);
-    io.to(msg.sender).emit('receive_message', msg); // adăugat
-  });
-  
+  socket.on("send_message", () => {});
 
   socket.on('disconnect', () => {
     console.log(`Disconnected: ${socket.id}`);

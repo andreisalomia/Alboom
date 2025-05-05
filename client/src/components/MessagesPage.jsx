@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
 import axios from "axios";
+import { useNotifications } from "../contexts/NotificationContext";
 
 const socket = io("http://localhost:5000");
 
@@ -12,6 +13,10 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const chatRef = useRef(null);
+  const { clearNotifications } = useNotifications();
+
+  const isSentByMe = (msg) =>
+    msg.sender === user.id || msg.sender?._id === user.id;
 
   useEffect(() => {
     if (user?.id) {
@@ -20,12 +25,18 @@ export default function MessagesPage() {
   }, [user?.id]);
 
   useEffect(() => {
+    clearNotifications();
+  }, [selectedUserId]);
+
+  useEffect(() => {
     const handleMessage = (msg) => {
       if (
-        msg.sender === selectedUserId ||
-        msg.recipient === selectedUserId
+        (msg.sender === selectedUserId || msg.sender?._id === selectedUserId) ||
+        (msg.recipient === selectedUserId || msg.recipient?._id === selectedUserId)
       ) {
-        setMessages((prev) => [...prev, msg]);
+        if (!isSentByMe(msg)) {
+          setMessages((prev) => [...prev, msg]);
+        }
       }
     };
 
@@ -100,16 +111,15 @@ export default function MessagesPage() {
           <div
             key={i}
             style={{
-              textAlign: m.sender === user.id ? "right" : "left",
+              textAlign: isSentByMe(m) ? "right" : "left",
               marginBottom: "0.5rem",
             }}
           >
             <div
               style={{
                 display: "inline-block",
-                background:
-                  m.sender === user.id ? "#007bff" : "#e9ecef",
-                color: m.sender === user.id ? "white" : "black",
+                background: isSentByMe(m) ? "#007bff" : "#e9ecef",
+                color: isSentByMe(m) ? "white" : "black",
                 padding: "0.5rem 1rem",
                 borderRadius: "20px",
                 maxWidth: "70%",
