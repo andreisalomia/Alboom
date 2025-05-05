@@ -3,6 +3,7 @@ import { useState, createContext, useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+import MessagesOverview from './components/MessagesOverview';
 import Navbar from './components/Navbar';
 import HomePage from './components/Home';
 import SongDetail from './components/SongDetail';
@@ -58,7 +59,8 @@ function App() {
           <Route path="/song/:id" element={<SongDetail />} />
           <Route path="/album/:id" element={<AlbumDetail />} />
           <Route path="/artist/:id" element={<ArtistDetail />} />
-          <Route path="/messages/:userId?" element={<MessagesPage />} />
+          <Route path="/messages" element={<MessagesOverview />} />
+          <Route path="/messages/:userId" element={<MessagesPage />} />
 
           <Route
             path="/profile/:userId/*"

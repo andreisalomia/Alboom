@@ -8,10 +8,9 @@ const mongoose = require('mongoose');
 // ✅ Listă cu toți utilizatorii cu care userul a vorbit
 router.get('/conversations', auth, async (req, res) => {
   const userId = req.user.id;
-
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  const users = await Message.aggregate([
+  const latestMessages = await Message.aggregate([
     {
       $match: {
         $or: [
@@ -28,18 +27,40 @@ router.get('/conversations', auth, async (req, res) => {
             "$recipient",
             "$sender"
           ]
-        }
+        },
+        content: 1,
+        createdAt: 1
       }
     },
     {
+      $sort: { createdAt: -1 }
+    },
+    {
       $group: {
-        _id: "$user"
+        _id: "$user",
+        lastMessage: { $first: "$content" },
+        lastTime: { $first: "$createdAt" }
       }
+    },
+    {
+      $match: { _id: { $ne: userObjectId } }
     }
   ]);
 
-  const ids = users.map(u => u._id);
-  const result = await User.find({ _id: { $in: ids } }).select('_id name');
+  const ids = latestMessages.map(m => m._id);
+  const users = await User.find({ _id: { $in: ids } }).select('_id name');
+
+  // Join user data and message content
+  const result = latestMessages.map(m => {
+    const user = users.find(u => u._id.toString() === m._id.toString());
+    return {
+      _id: m._id,
+      name: user?.name || "Unknown",
+      lastMessage: m.lastMessage,
+      lastTime: m.lastTime
+    };
+  });
+
   res.json(result);
 });
 

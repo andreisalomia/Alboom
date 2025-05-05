@@ -68,6 +68,7 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link to={`/profile/${user.id}`} onClick={() => setMenuOpen(false)}>Profile</Link>
+                    <Link to="/messages" onClick={() => setMenuOpen(false)}>Messages</Link>
                     <button onClick={() => { setMenuOpen(false); logout() }} className="logout-button">
                       Logout
                     </button>
