@@ -5,6 +5,7 @@ const Playlist = require('../models/Playlist');
 const authMiddleware = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const Review = require('../models/Review');
+const Song = require('../models/Song');
 
 router.get('/:userId', async (req, res) => {
   try {
@@ -16,15 +17,14 @@ router.get('/:userId', async (req, res) => {
       ? '-password -verified -verificationCode'
       : '-password -verified -verificationCode -email';
 
-      const user = await User.findById(req.params.userId)
+    const user = await User.findById(req.params.userId)
       .select(selectFields)
       .populate('favoriteArtists')
       .populate('favoriteAlbums')
       .populate('favoriteSongs')
       .populate('friends', 'name')
       .populate('friendRequestsReceived', 'name');
-    
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -41,22 +41,40 @@ router.get('/:userId', async (req, res) => {
       .populate({
         path: 'targetId',
         refPath: 'targetType'
-      })
-
-    const reviews2 = reviews.map(review => {
-        const reviewObj = review.toObject();
-        return {
-          ...reviewObj,
-          score: reviewObj.upvotes.length - reviewObj.downvotes.length,
-          upvotes: undefined,
-          downvotes: undefined
-        };
       });
+
+    const populatedReviews = await Promise.all(reviews.map(async review => {
+      const reviewObj = review.toObject();
+      let image = null;
+      let name = null;
+
+      if (reviewObj.targetType === 'song' && reviewObj.targetId) {
+        const song = await Song.findById(reviewObj.targetId._id).populate('album');
+        image = song?.album?.coverImage || null;
+        name = song?.title || null;
+      } else if (reviewObj.targetType === 'album' && reviewObj.targetId) {
+        image = reviewObj.targetId.coverImage;
+        name = reviewObj.targetId.title || null;
+      } else if (reviewObj.targetType === 'artist' && reviewObj.targetId) {
+        image = reviewObj.targetId.image;
+        name = reviewObj.targetId.name || null;
+      }
+
+      return {
+        ...reviewObj,
+        score: reviewObj.upvotes.length - reviewObj.downvotes.length,
+        upvotes: undefined,
+        downvotes: undefined,
+        image,
+        content: reviewObj.content,
+        name
+      };
+    }));
 
     res.json({
       ...user.toObject(),
       playlists,
-      reviews: reviews2
+      reviews: populatedReviews
     });
 
   } catch (err) {
