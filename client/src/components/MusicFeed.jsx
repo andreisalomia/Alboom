@@ -12,9 +12,9 @@ export default function MusicFeed({ refreshTrigger }) {
     useEffect(() => {
         const fetchData = async () => {
             const [albumsRes, artistsRes, songsRes] = await Promise.all([
-                axios.get("/api/music/albums"),
-                axios.get("/api/music/artists"),
-                axios.get("/api/music/songs"),
+                axios.get("api/music/albums"),
+                axios.get("api/music/artists"),
+                axios.get("api/music/songs"),
             ]);
             setAlbums(albumsRes.data);
             setArtists(artistsRes.data);
