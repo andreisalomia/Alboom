@@ -282,6 +282,79 @@ router.delete('/me/favorites/:songId', authMiddleware, async (req, res) => {
   }
 });
 
+// GET  /api/users/me/playlists
+router.get(
+  '/me/playlists',
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const lists = await Playlist
+        .find({ owner: req.user.id })
+        .populate('songs');
+      res.json(lists);
+    } catch (err) {
+      console.error('Error fetching playlists:', err);
+      res.status(500).json({ message: 'Server error fetching playlists' });
+    }
+  }
+);
+
+// POST /api/users/me/playlists
+router.post(
+  '/me/playlists',
+  authMiddleware,
+  async (req, res) => {
+    const { name, isPublic } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: 'Playlist name required' });
+    }
+    try {
+      const playlist = new Playlist({
+        name,
+        owner: req.user.id,
+        songs: [],
+        isPublic: isPublic ?? true
+      });
+      await playlist.save();
+      res.status(201).json(playlist);
+    } catch (err) {
+      console.error('Error creating playlist:', err);
+      res.status(500).json({ message: 'Server error creating playlist' });
+    }
+  }
+);
+
+// POST /api/users/me/playlists/:playlistId/songs
+router.post(
+  '/me/playlists/:playlistId/songs',
+  authMiddleware,
+  async (req, res) => {
+    const { playlistId } = req.params;
+    const { songId }     = req.body;
+    if (!songId) {
+      return res.status(400).json({ message: 'songId is required' });
+    }
+    try {
+      const playlist = await Playlist.findById(playlistId);
+      if (!playlist) {
+        return res.status(404).json({ message: 'Playlist not found' });
+      }
+      if (playlist.owner.toString() !== req.user.id) {
+        return res.status(403).json({ message: 'Not authorized' });
+      }
+      if (!playlist.songs.includes(songId)) {
+        playlist.songs.push(songId);
+        await playlist.save();
+      }
+      // populate before returning, dacă vrei
+      await playlist.populate('songs');
+      res.json(playlist);
+    } catch (err) {
+      console.error('Error adding song to playlist:', err);
+      res.status(500).json({ message: 'Server error adding song to playlist' });
+    }
+  }
+);
 
 
 module.exports = router

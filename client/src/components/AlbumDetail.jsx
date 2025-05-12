@@ -20,6 +20,13 @@ export default function AlbumDetail() {
   const [avgRating, setAvgRating] = useState(0);
   const [userRating, setUserRating] = useState(0);
   const [favoriteIds, setFavoriteIds] = useState([]);
+
+  const [playlists, setPlaylists] = useState([]);
+  const [addingSongId, setAddingSongId] = useState(null);
+  const [selectedPlaylist, setSelectedPlaylist] = useState("");
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [creatingNew, setCreatingNew] = useState(false);
+
   // Current user
   const [currentUser, setCurrentUser] = useState(null);
   useEffect(() => {
@@ -40,7 +47,7 @@ export default function AlbumDetail() {
     setLoading(true);
     axios.get(`/api/music/albums/${id}`)
       .then(res => {
-        console.log("Album payload:", res.data);
+        //console.log("Album payload:", res.data);
         albumCache[id] = res.data;
         setAlbum(res.data);
       })
@@ -48,20 +55,16 @@ export default function AlbumDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
-   // Load user's favorite songs
   useEffect(() => {
     if (!currentUser) return;
-    const fetchFavorites = async () => {
-      try {
-        const res = await axios.get("/api/users/me/favorites", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        setFavoriteIds(res.data.map(s => s._id.toString()));
-      } catch (err) {
-        console.error("Could not load favorites:", err);
-      }
-    };
-    fetchFavorites();
+    // favorites
+    axios.get("/api/users/me/favorites", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
+      .then(res => setFavoriteIds(res.data.map(s => s._id.toString())))
+      .catch(console.error);
+    // playlists
+    axios.get("/api/users/me/playlists", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })
+      .then(res => setPlaylists(res.data))
+      .catch(console.error);
   }, [currentUser]);
 
    // Toggle favorite for a specific song
@@ -83,6 +86,42 @@ export default function AlbumDetail() {
       }
     } catch (err) {
       console.error("Favorite toggle failed", err);
+    }
+  };
+
+    // Add/song to playlist or create new
+  const handleAdd = async (songId) => {
+    if (creatingNew) {
+      // create playlist first
+      const res = await axios.post(
+        "/api/users/me/playlists",
+        { name: newPlaylistName },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      const plist = res.data; // new playlist
+      setPlaylists(pls => [...pls, plist]);
+      await addToPlaylist(songId, plist._id);
+      setCreatingNew(false);
+      setNewPlaylistName("");
+    } else {
+      await addToPlaylist(songId, selectedPlaylist);
+    }
+  };
+   // Add song to playlist
+  const addToPlaylist = async (songId, playlistId) => {
+    try {
+      await axios.post(
+        `/api/users/me/playlists/${playlistId}/songs`,
+        { songId },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      alert("Piesa a fost adăugată în playlist!");
+    } catch (err) {
+      console.error(err.response || err);
+      alert("Eroare la adăugarea piesei în playlist.");
+    } finally {
+      setAddingSongId(null);
+      setSelectedPlaylist("");
     }
   };
 
@@ -154,17 +193,53 @@ export default function AlbumDetail() {
         textAlign: "left"
       }}>
         {songs.map(song => {
-          const liked = favoriteIds.includes(song._id.toString());
+          const sid = song._id.toString();
+          const liked = favoriteIds.includes(sid);
           return (
-            <li key={song._id} style={{ display: "flex", alignItems: "center", margin: "0.5rem 0" }}>
-              <span style={{ flexGrow: 1 }}>{song.title}</span>
-              <span
-                onClick={() => toggleFavorite(song._id.toString())}
-                style={{ cursor: currentUser ? "pointer" : "default", fontSize: "1.2rem", marginLeft: "0.5rem", color: liked ? "red" : "lightgray" }}
-                aria-label={liked ? "Înlătură din favorite" : "Adaugă la favorite"}
-              >
+            <li key={sid} style={{ display: "flex", alignItems: "center", margin: "0.5rem 0", justifyContent: "space-between" }}>
+              <div style={{ flexGrow: 1 }}>
+                {song.title}
+                <button style={{ marginLeft: "1rem" }} onClick={() => setAddingSongId(sid)}>
+                  + Add to playlist
+                </button>
+              </div>
+              <span onClick={() => toggleFavorite(sid)} style={{ cursor: "pointer", fontSize: "1.2rem", color: liked ? "red" : "lightgray" }}>
                 {liked ? <FaHeart /> : <FaRegHeart />}
               </span>
+              {addingSongId === sid && (
+                <>
+                  <select
+                    value={selectedPlaylist}
+                    onChange={e => {
+                      if (e.target.value === "__new") {
+                        setCreatingNew(true);
+                        setSelectedPlaylist("");
+                      } else {
+                        setCreatingNew(false);
+                        setSelectedPlaylist(e.target.value);
+                      }
+                    }}
+                    style={{ marginLeft: 8 }}
+                  >
+                    <option value="">Select playlist</option>
+                    {playlists.map(pl => <option key={pl._id} value={pl._id}>{pl.name}</option>)}
+                    <option value="__new">+ Create new playlist</option>
+                  </select>
+                  {creatingNew && (
+                    <input
+                      value={newPlaylistName}
+                      onChange={e => setNewPlaylistName(e.target.value)}
+                      placeholder="New playlist name"
+                      style={{ marginLeft: 8 }}
+                    />
+                  )}
+                  {(selectedPlaylist || creatingNew) && (
+                    <button onClick={() => handleAdd(sid)} style={{ marginLeft: 4 }}>
+                      {creatingNew ? "Create & Add" : "Add"}
+                    </button>
+                  )}
+                </>
+              )}
             </li>
           );
         })}
