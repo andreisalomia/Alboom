@@ -1,5 +1,5 @@
 // client/src/components/AlbumDetail.jsx
-
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -19,7 +19,7 @@ export default function AlbumDetail() {
   const [reviews, setReviews]     = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [userRating, setUserRating] = useState(0);
-
+  const [favoriteIds, setFavoriteIds] = useState([]);
   // Current user
   const [currentUser, setCurrentUser] = useState(null);
   useEffect(() => {
@@ -40,12 +40,51 @@ export default function AlbumDetail() {
     setLoading(true);
     axios.get(`/api/music/albums/${id}`)
       .then(res => {
+        console.log("Album payload:", res.data);
         albumCache[id] = res.data;
         setAlbum(res.data);
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+   // Load user's favorite songs
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchFavorites = async () => {
+      try {
+        const res = await axios.get("/api/users/me/favorites", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        setFavoriteIds(res.data.map(s => s._id.toString()));
+      } catch (err) {
+        console.error("Could not load favorites:", err);
+      }
+    };
+    fetchFavorites();
+  }, [currentUser]);
+
+   // Toggle favorite for a specific song
+  const toggleFavorite = async (songId) => {
+    if (!currentUser) return;
+    try {
+      if (favoriteIds.includes(songId)) {
+        await axios.delete(`/api/users/me/favorites/${songId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+        setFavoriteIds(prev => prev.filter(id => id !== songId));
+      } else {
+        await axios.post(
+          "/api/users/me/favorites",
+          { songId },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+        setFavoriteIds(prev => [...prev, songId]);
+      }
+    } catch (err) {
+      console.error("Favorite toggle failed", err);
+    }
+  };
 
   // Load reviews
   const loadReviews = async () => {
@@ -74,7 +113,8 @@ export default function AlbumDetail() {
   if (loading) return <div>Se încarcă detaliile albumului...</div>;
   if (error || !album) return <div>Nu am găsit detalii pentru album.</div>;
 
-  const { _id, title, coverImage, artistName, genre, releaseDate, songs } = album;
+  const { _id, title, coverImage, genre, releaseDate, songs, artist } = album;
+  const artistName = artist?.name || "--";
   const roundedAvg = Math.round(avgRating);
 
   return (
@@ -111,13 +151,23 @@ export default function AlbumDetail() {
         listStylePosition: "inside",
         padding: 0,
         margin: "1rem 0",
-        textAlign: "center"
+        textAlign: "left"
       }}>
-        {songs.map(song => (
-          <li key={song._id} style={{ margin: "0.25rem 0" }}>
-            {song.title}
-          </li>
-        ))}
+        {songs.map(song => {
+          const liked = favoriteIds.includes(song._id.toString());
+          return (
+            <li key={song._id} style={{ display: "flex", alignItems: "center", margin: "0.5rem 0" }}>
+              <span style={{ flexGrow: 1 }}>{song.title}</span>
+              <span
+                onClick={() => toggleFavorite(song._id.toString())}
+                style={{ cursor: currentUser ? "pointer" : "default", fontSize: "1.2rem", marginLeft: "0.5rem", color: liked ? "red" : "lightgray" }}
+                aria-label={liked ? "Înlătură din favorite" : "Adaugă la favorite"}
+              >
+                {liked ? <FaHeart /> : <FaRegHeart />}
+              </span>
+            </li>
+          );
+        })}
       </ol>
 
       {/* Your rating */}
