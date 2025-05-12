@@ -1,11 +1,25 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');   
 const User = require('../models/User');
 const Playlist = require('../models/Playlist');
 const authMiddleware = require('../middleware/authMiddleware');
 const jwt = require('jsonwebtoken');
 const Review = require('../models/Review');
 const Song = require('../models/Song');
+const multer = require('multer');
+const mongoose = require('mongoose');
+const upload = multer({ storage: multer.memoryStorage() })
+
+
+
+let bucket
+mongoose.connection.once('open', () => {
+  bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    bucketName: 'avatars'
+  })
+})
+
 
 router.get('/:userId', async (req, res) => {
   try {
@@ -157,5 +171,63 @@ router.delete('/:userId/friends', authMiddleware, async (req, res) => {
   res.json({ message: 'Friend removed or request canceled' });
 });
 
+// GET /api/users/avatar/:fileId
+router.get('/avatar/:fileId', async (req, res) => {
+  try {
+    const fileId = req.params.fileId;
+    console.log('Avatar download requested for ID:', fileId);
 
-module.exports = router;
+    const _id = new mongoose.Types.ObjectId(fileId);
+    // check the file exists
+    const files = await bucket.find({ _id }).toArray();
+    if (!files || files.length === 0) {
+      console.warn('No avatar file found for', fileId);
+      return res.sendStatus(404);
+    }
+
+    // stream it
+    bucket.openDownloadStream(_id)
+      .on('error', err => {
+        console.error('GridFS download error:', err);
+        res.sendStatus(500);
+      })
+      .pipe(res);
+  } catch (err) {
+    console.error('Avatar endpoint error:', err);
+    res.sendStatus(400);
+  }
+});
+
+router.patch('/me', authMiddleware, upload.single('avatar'), async (req, res) => {
+  try {
+    const updates = {}
+    if (req.body.name) updates.name = req.body.name.trim()
+    if (req.file && bucket) {
+      const ext = path.extname(req.file.originalname)
+      const uploadStream = bucket.openUploadStream(
+        `${req.user.id}-${Date.now()}${ext}`,
+        { contentType: req.file.mimetype }
+      );
+      uploadStream.end(req.file.buffer);
+      await new Promise((resolve, reject) => {
+        uploadStream.on('finish', resolve);
+        uploadStream.on('error', reject);
+      });
+      updates.profileImage = uploadStream.id;
+    }
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select('-password')
+    res.json(user)
+  } catch (err) {
+    console.error('Profile update error:', err);
+    if (err.code === 11000 && err.keyPattern?.name) {
+      return res.status(409).json({ message: 'That username is already taken.' });
+    }
+    res.status(400).json({ message: err.message || 'Unknown error' });
+  }
+})
+
+module.exports = router

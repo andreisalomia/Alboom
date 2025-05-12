@@ -1,9 +1,8 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
-import { useState, createContext, useContext } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import React from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-
 import MessagesOverview from './components/MessagesOverview';
 import Navbar from './components/Navbar';
 import HomePage from './components/Home';
@@ -11,6 +10,7 @@ import SongDetail from './components/SongDetail';
 import AlbumDetail from './components/AlbumDetail';
 import ArtistDetail from './components/ArtistDetail';
 import UserProfile from './components/UserProfile';
+import ProfileSettings from './components/ProfileSettings';
 import ResetPasswordForm from './components/ResetPasswordForm';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -32,50 +32,45 @@ function LoginPage() {
 function RegisterPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState(null);
-
   if (!email) {
     return <RegisterForm onRegistered={setEmail} />;
   }
-  // once registered, show the verification step
   return <VerifyCodeForm email={email} onVerified={() => navigate('/login')} />;
 }
 
-// gen folosim useAuth() in componente si chestii ca sa nu trimiti mereu userInfo ca e urat
-// vezi in contexts/authcontext 
-function App() {
+function AppContent() {
+  const { user } = useAuth();
+
+  return (
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/reset-password" element={<ResetPasswordForm />} />
+        <Route path="/song/:id" element={<SongDetail />} />
+        <Route path="/album/:id" element={<AlbumDetail />} />
+        <Route path="/artist/:id" element={<ArtistDetail />} />
+        <Route path="/messages" element={<MessagesOverview />} />
+        <Route path="/messages/:userId" element={<MessagesPage />} />
+        <Route path="/profile/:userId/*" element={<UserProfile />} />
+        <Route
+          path="/settings"
+          element={user ? <ProfileSettings /> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-      <ToastContainer position='bottom-right' autoClose={3000} />
-      <div className="App">
-        <Navbar/>
-
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <HomePage />
-            }
-          />
-
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/reset-password" element={<ResetPasswordForm />} />
-          <Route path="/song/:id" element={<SongDetail />} />
-          <Route path="/album/:id" element={<AlbumDetail />} />
-          <Route path="/artist/:id" element={<ArtistDetail />} />
-          <Route path="/messages" element={<MessagesOverview />} />
-          <Route path="/messages/:userId" element={<MessagesPage />} />
-
-          <Route
-            path="/profile/:userId/*"
-            element={<UserProfile />}
-          />
-        </Routes>
-      </div>
+        <ToastContainer position="bottom-right" autoClose={3000} />
+        <AppContent />
       </NotificationProvider>
     </AuthProvider>
   );
 }
-
-export default App;

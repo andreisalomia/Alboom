@@ -19,7 +19,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error("MongoDB error:", err));
 
 io.on('connection', (socket) => {
-  console.log(`Connected: ${socket.id}`);
+  // console.log(`Connected: ${socket.id}`);
 
   // Fiecare client se "înregistrează" cu propriul ID
   socket.on('register', (userId) => {
@@ -30,9 +30,9 @@ io.on('connection', (socket) => {
   // Mesaj privat trimis prin socket (opțional - fallback la REST)
   socket.on("send_message", () => {});
 
-  socket.on('disconnect', () => {
-    console.log(`Disconnected: ${socket.id}`);
-  });
+  // socket.on('disconnect', () => {
+  //   console.log(`Disconnected: ${socket.id}`);
+  // });
 });
 
 app.locals.io = io;
@@ -43,7 +43,8 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/reviews', require('./routes/reviews'));
-app.use('/api/messages', require('./routes/messages')); // mesaje REST
+app.use('/api/messages', require('./routes/messages')); 
+
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {

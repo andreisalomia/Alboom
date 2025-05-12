@@ -1,3 +1,4 @@
+// client/src/components/Navbar.jsx
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
@@ -14,21 +15,21 @@ export default function Navbar() {
   useEffect(() => {
     const primeAudio = () => {
       const audio = new Audio("/notification.mp3");
-      audio.play().catch(() => {}); // expected to fail, but primes it
+      audio.play().catch(() => {});
       document.removeEventListener("click", primeAudio);
     };
-  
     document.addEventListener("click", primeAudio);
   }, []);
-
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "auto";
   }, [menuOpen]);
 
+  // use user.id if present, otherwise fall back to user._id
+  const userId = user?.id ?? user?._id;
+
   return (
     <div>
-      {/* Navbar */}
       <nav className="navbar">
         <div className="navbar-left">
           <Link to="/" className="navbar-logo">Alboom</Link>
@@ -40,11 +41,9 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Overlay + Slide Menu */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            {/* Fundal întunecat simplu */}
             <motion.div
               className="overlay"
               initial={{ opacity: 0 }}
@@ -54,7 +53,6 @@ export default function Navbar() {
               onClick={() => setMenuOpen(false)}
             />
 
-            {/* Side Menu */}
             <motion.div
               className="side-menu"
               initial={{ x: "100%" }}
@@ -80,25 +78,37 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link to={`/profile/${user.id}`} onClick={() => setMenuOpen(false)}>Profile</Link>
-                    <Link to="/messages" onClick={() => setMenuOpen(false)} style={{ position: "relative" }}>
+                    <Link
+                      to={`/profile/${userId}`}
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      to="/messages"
+                      onClick={() => setMenuOpen(false)}
+                      style={{ position: "relative" }}
+                    >
                       Messages
                       {notifications.length > 0 && (
                         <span style={{
-                        position: "absolute",
-                        top: -5,
-                        right: -10,
-                        background: "red",
-                        color: "white",
-                        borderRadius: "50%",
-                        padding: "2px 6px",
-                        fontSize: "0.75rem"
+                          position: "absolute",
+                          top: -5,
+                          right: -10,
+                          background: "red",
+                          color: "white",
+                          borderRadius: "50%",
+                          padding: "2px 6px",
+                          fontSize: "0.75rem"
                         }}>
                           {notifications.length}
-                    </span>
+                        </span>
                       )}
                     </Link>
-                    <button onClick={() => { setMenuOpen(false); logout() }} className="logout-button">
+                    <button
+                      onClick={() => { setMenuOpen(false); logout(); }}
+                      className="logout-button"
+                    >
                       Logout
                     </button>
                   </>

@@ -1,14 +1,15 @@
+// client/src/components/UserProfile.jsx
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useParams } from "react-router-dom";
 
-import '../styles/UserProfile.css';
+import "../styles/UserProfile.css";
 
-import ProfileOverview from './ProfileOverview';
-import ProfilePlaylists from './ProfilePlaylists';
-import ProfileFavoriteSongs from './ProfileFavoriteSongs';
-import ProfileSettings from './ProfileSettings';
-import ProfileFriends from './ProfileFriends';
+import ProfileOverview from "./ProfileOverview";
+import ProfilePlaylists from "./ProfilePlaylists";
+import ProfileFavoriteSongs from "./ProfileFavoriteSongs";
+import ProfileSettings from "./ProfileSettings";
+import ProfileFriends from "./ProfileFriends";
 
 import { useAuth } from "../contexts/AuthContext";
 import { ProfileProvider } from "../contexts/ProfileContext";
@@ -21,12 +22,20 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const location = useLocation();
   const { userId } = useParams();
-  const currentPath = location.pathname.split('/').pop();
+  const currentPath = location.pathname.split("/").pop();
 
-  const isOwnProfile = userId === currentUser?.id;
+  const isOwnProfile = userId === currentUser?._id;
+
+
+  const avatarSrc = isOwnProfile
+    ? currentUser.profileImage
+    : userData?.profileImage
+    ? `/api/users/avatar/${userData.profileImage}`
+    : null;
 
   useEffect(() => {
-    axios.get(`/api/users/${userId}`)
+    axios
+      .get(`/api/users/${userId}`)
       .then(({ data }) => {
         setUserData(data);
         setInvalidUser(false);
@@ -34,66 +43,68 @@ export default function UserProfile() {
       .catch(() => setInvalidUser(true));
   }, [userId]);
 
-  const navigateToSection = (section) => {
-    navigate(`/profile/${userId}/${section}`, { replace: true });
-  };
-
   if (invalidUser) {
     return (
       <div>
         <h2>User not found</h2>
-        <p>The user you're looking for doesn't exist.</p>
-        <button onClick={() => navigate('/')}>Go back home</button>
+        <button onClick={() => navigate("/")}>Go back home</button>
       </div>
     );
   }
+
+  const navigateToSection = (section) => {
+    navigate(`/profile/${userId}/${section}`, { replace: true });
+  };
 
   return (
     <div className="profile-container">
       <div className="profile-sidebar">
         <div className="profile-info">
           <div className="profile-avatar">
-            {userData?.name?.charAt(0).toUpperCase() || '?'}
+            {avatarSrc ? (
+              <img src={avatarSrc} alt="avatar" />
+            ) : (
+              <div className="avatar-placeholder">
+                {userData?.name?.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
           </div>
-          <h2 className="profile-name">{userData?.name || 'User Name'}</h2>
+          <h2 className="profile-name">{userData?.name || "User Name"}</h2>
         </div>
 
         <nav className="profile-nav">
-          <button 
-            className={`nav-item ${currentPath === '' ? 'active' : ''}`}
-            onClick={() => navigateToSection('')}
+          <button
+            className={`nav-item ${currentPath === "" ? "active" : ""}`}
+            onClick={() => navigateToSection("")}
           >
             Overview
           </button>
-          <button 
-            className={`nav-item ${currentPath === 'playlists' ? 'active' : ''}`}
-            onClick={() => navigateToSection('playlists')}
+          <button
+            className={`nav-item ${
+              currentPath === "playlists" ? "active" : ""
+            }`}
+            onClick={() => navigateToSection("playlists")}
           >
             Playlists
           </button>
-          <button 
-            className={`nav-item ${currentPath === 'songs' ? 'active' : ''}`}
-            onClick={() => navigateToSection('songs')}
+          <button
+            className={`nav-item ${currentPath === "songs" ? "active" : ""}`}
+            onClick={() => navigateToSection("songs")}
           >
             Favorite Songs
           </button>
-          <button 
-            className={`nav-item ${currentPath === 'friends' ? 'active' : ''}`}
-            onClick={() => navigateToSection('friends')}
+          <button
+            className={`nav-item ${currentPath === "friends" ? "active" : ""}`}
+            onClick={() => navigateToSection("friends")}
           >
             Friends
           </button>
-          {/* Poți activa când ai date */}
-          {/* <button 
-            className={`nav-item ${currentPath === 'reviews' ? 'active' : ''}`}
-            onClick={() => navigateToSection('reviews')}
-          >
-            Reviews
-          </button> */}
           {isOwnProfile && (
-            <button 
-              className={`nav-item at-bottom ${currentPath === 'settings' ? 'active' : ''}`}
-              onClick={() => navigateToSection('settings')}
+            <button
+              className={`nav-item at-bottom ${
+                currentPath === "settings" ? "active" : ""
+              }`}
+              onClick={() => navigateToSection("settings")}
             >
               Settings
             </button>
