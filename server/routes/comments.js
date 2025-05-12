@@ -1,79 +1,98 @@
 // server/routes/comments.js
-
 const express = require('express');
-const auth = require('../middleware/authMiddleware');
-const Comment = require('../models/Comment');
 const router = express.Router();
+const Comment = require('../models/Comment');
+const authMiddleware = require('../middleware/authMiddleware');
 
-// GET all comments for a given target
+// GET /api/comments?targetType=...&targetId=...
 router.get('/', async (req, res) => {
-  const { targetType, targetId } = req.query;
-  if (!targetType || !targetId) {
-    return res.status(400).json({ message: 'targetType & targetId required' });
+  try {
+    const { targetType, targetId } = req.query;
+    if (!targetType || !targetId) {
+      return res.status(400).json({ message: 'Missing targetType or targetId' });
+    }
+    const comments = await Comment.find({ targetType, targetId })
+      .sort({ createdAt: 1 })
+      .populate('author', 'name profileImage');
+    res.json(comments);
+  } catch (err) {
+    console.error('Failed to load comments:', err);
+    res.status(500).json({ message: 'Failed to load comments' });
   }
-  const comments = await Comment.find({ targetType, targetId })
-    .sort('createdAt')
-    .populate('author', 'name');
-  res.json(comments);
 });
 
-// POST a new comment or reply
-router.post('/', auth, async (req, res) => {
-  const { targetType, targetId, parentId, content } = req.body;
-  const comment = await Comment.create({
-    author:     req.user.id,
-    targetType,
-    targetId,
-    parentId:   parentId || undefined,
-    content,
-    likes:      [],
-    dislikes:   []
-  });
-  await comment.populate('author', 'name');
-  res.status(201).json(comment);
+// POST /api/comments
+router.post('/', authMiddleware, async (req, res) => {
+  try {
+    const { targetType, targetId, parentId, content } = req.body;
+    const comment = new Comment({
+      targetType,
+      targetId,
+      parentId: parentId || null,
+      content,
+      author: req.user.id
+    });
+    await comment.save();
+    const populated = await comment
+      .populate('author', 'name profileImage')
+      .execPopulate();
+    res.status(201).json(populated);
+  } catch (err) {
+    console.error('Failed to post comment:', err);
+    res.status(500).json({ message: 'Failed to post comment' });
+  }
 });
 
-// DELETE a comment
-router.delete('/:id', auth, async (req, res) => {
-  const c = await Comment.findById(req.params.id);
-  if (!c) return res.status(404).json({ message: 'Not found' });
-  const me = req.user;
-  // only author or mod/admin can delete
-  if (c.author.toString() !== me.id && !['moderator','admin'].includes(me.role)) {
-    return res.status(403).json({ message: 'Forbidden' });
+// DELETE /api/comments/:id
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    if (comment.author.toString() !== req.user.id && req.user.role === 'authenticated_user') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    await comment.remove();
+    res.json({ message: 'Comment deleted' });
+  } catch (err) {
+    console.error('Failed to delete comment:', err);
+    res.status(500).json({ message: 'Failed to delete comment' });
   }
-  // ← replace remove() with deleteOne()
-  await c.deleteOne();
-  res.json({ message: 'Deleted' });
 });
 
-// LIKE / DISLIKE
-router.post('/:id/like', auth, async (req, res) => {
-  const c = await Comment.findById(req.params.id);
-  if (!c) return res.status(404).json({ message: 'Not found' });
-  const me = req.user.id;
-  c.dislikes = c.dislikes.filter(u => u.toString() !== me);
-  if (c.likes.find(u => u.toString() === me)) {
-    c.likes = c.likes.filter(u => u.toString() !== me);
-  } else {
-    c.likes.push(me);
+// POST /api/comments/:id/like
+router.post('/:id/like', authMiddleware, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    const uid = req.user.id;
+    if (!comment.likes.includes(uid)) {
+      comment.likes.push(uid);
+      comment.dislikes = comment.dislikes.filter(d => d.toString() !== uid);
+      await comment.save();
+    }
+    res.json({ likes: comment.likes.length, dislikes: comment.dislikes.length });
+  } catch (err) {
+    console.error('Failed to like comment:', err);
+    res.status(500).json({ message: 'Failed to like comment' });
   }
-  await c.save();
-  res.json(c);
 });
 
-router.post('/:id/dislike', auth, async (req, res) => {
-  const c = await Comment.findById(req.params.id);
-  if (!c) return res.status(404).json({ message: 'Not found' });
-  const me = req.user.id;
-  c.likes = c.likes.filter(u => u.toString() !== me);
-  if (c.dislikes.find(u => u.toString() === me)) {
-    c.dislikes = c.dislikes.filter(u => u.toString() !== me);
-  } else {
-    c.dislikes.push(me);
+// POST /api/comments/:id/dislike
+router.post('/:id/dislike', authMiddleware, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+    const uid = req.user.id;
+    if (!comment.dislikes.includes(uid)) {
+      comment.dislikes.push(uid);
+      comment.likes = comment.likes.filter(l => l.toString() !== uid);
+      await comment.save();
+    }
+    res.json({ likes: comment.likes.length, dislikes: comment.dislikes.length });
+  } catch (err) {
+    console.error('Failed to dislike comment:', err);
+    res.status(500).json({ message: 'Failed to dislike comment' });
   }
-  await c.save();
-  res.json(c);
 });
 
 module.exports = router;
