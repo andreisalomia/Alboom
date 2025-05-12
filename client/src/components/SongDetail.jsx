@@ -1,21 +1,16 @@
-// client/src/components/SongDetail.jsx
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import CommentSection from "./CommentSection";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
 
 export default function SongDetail() {
   const { id } = useParams();
   const [song, setSong]       = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
-
-  // Reviews state
-  const [reviews, setReviews]     = useState([]);
-  const [avgRating, setAvgRating] = useState(0);
-  const [userRating, setUserRating] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   // Current user
   const [currentUser, setCurrentUser] = useState(null);
@@ -26,15 +21,58 @@ export default function SongDetail() {
     } catch {}
   }, []);
 
-  // Load song
+  // Load song + status favorite
   useEffect(() => {
+    setLoading(true);
     axios.get(`/api/music/songs/${id}`)
-      .then(res => setSong(res.data))
+      .then(res => {
+        setSong(res.data);
+        // dacă backend-ul returnează `isFavorited`
+        setIsFavorited(!!res.data.isFavorited);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
 
+   // 2️⃣ La fiecare mount sau când currentUser/id se schimbă,
+ // trage lista de favorite și setează isFavorited
+  useEffect(() => {
+    if (!currentUser) return;
+    axios.get("/api/users/me/favorites", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+    })
+    .then(res => {
+      // res.data = [{ _id, title, artist }, ...]
+      const favIds = res.data.map(s => s._id);
+      setIsFavorited(favIds.includes(id));
+    })
+    .catch(err => console.error("Could not load favorites:", err));
+  }, [currentUser, id]);
+  // toggle favorite
+  const toggleFavorite = async () => {
+    if (!currentUser) return; // sau redirecționează la login
+    try {
+      if (isFavorited) {
+        await axios.delete(`/api/users/me/favorites/${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        });
+      } else {
+        await axios.post(`/api/users/me/favorites`,
+          { songId: id },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+      }
+      setIsFavorited(!isFavorited);
+    } catch (err) {
+      console.error("Favorite toggle failed", err);
+    }
+  };
+
+  // … tot ce ține de reviews/ratings rămâne la fel
   // Load reviews & compute ratings
+  const [reviews, setReviews]     = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [userRating, setUserRating] = useState(0);
   const loadReviews = async () => {
     const res = await axios.get("/api/reviews", { params: { targetType: "song", targetId: id } });
     const data = res.data;
@@ -48,7 +86,6 @@ export default function SongDetail() {
     }
   };
   useEffect(() => { loadReviews(); }, [id, currentUser]);
-
   const handleRating = async (star) => {
     if (!currentUser) return;
     await axios.post("/api/reviews",
@@ -66,10 +103,26 @@ export default function SongDetail() {
   const roundedAvg = Math.round(avgRating);
 
   return (
-    <div style={{ textAlign: "center", padding: "2rem" }}>
+    <div style={{ position: "relative", textAlign: "center", padding: "2rem" }}>
+      {/* ❤️ / 🤍 Inimioara toggle */}
+      <div
+        onClick={toggleFavorite}
+        style={{
+          position: "absolute",
+          top: "1rem",
+          right: "1rem",
+          cursor: "pointer",
+          fontSize: "1.8rem",
+          color: isFavorited ? "red" : "lightgray"
+        }}
+        aria-label={isFavorited ? "Înlătură din favorite" : "Adaugă la favorite"}
+      >
+        {isFavorited ? <FaHeart /> : <FaRegHeart />}
+      </div>
+
       <h2>{title}</h2>
 
-      {/* 📊 Average Rating (read-only, blue stars) */}
+      {/* 📊 Average Rating */}
       <div><strong>Average rating:</strong> {avgRating.toFixed(1)} / 5</div>
       <div style={{ margin: "0.25rem 0" }}>
         {[1,2,3,4,5].map(i => (
@@ -94,7 +147,7 @@ export default function SongDetail() {
       <p><strong>Gen:</strong> {genre}</p>
       <p><strong>Duration:</strong> {formatDur(duration)}</p>
 
-      {/* 🌟 Your Rating (interactive, gold stars) */}
+      {/* 🌟 Your Rating */}
       <div style={{ margin: "1rem 0" }}>
         {[1,2,3,4,5].map(i => (
           <span
@@ -119,3 +172,5 @@ export default function SongDetail() {
     </div>
   );
 }
+
+
