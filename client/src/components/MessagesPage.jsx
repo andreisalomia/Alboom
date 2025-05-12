@@ -16,7 +16,7 @@ export default function MessagesPage() {
   // Socket registration
   useEffect(() => {
     if (user?.id && socket) {
-      console.log("📡 Registering user on socket:", user.id);
+      // console.log("Registering user on socket:", user.id);
       socket.emit("register", user.id);
     }
   }, [user, socket]);
@@ -52,17 +52,17 @@ export default function MessagesPage() {
   
     const handler = (e) => {
       const msg = e.detail;
-      console.log("📥 [MessagesPage] Received message:", msg);
+      // console.log("[MessagesPage] Received message:", msg);
   
       const inCurrentChat =
-        (String(msg.sender) === userId && msg.recipient === user.id) ||
-        (msg.sender === user.id && String(msg.recipient) === userId);
+        (String(msg.sender) === userId && String(msg.recipient) === user.id) ||
+        (String(msg.sender) === user.id && String(msg.recipient) === userId);
   
       if (inCurrentChat) {
-        console.log("✅ Message is for this chat. Appending to UI.");
+        // console.log("Message is for this chat. Appending to UI.");
         setMessages((prev) => [...prev, msg]);
       } else {
-        console.log("⚠️ Message is NOT for this chat.");
+        console.log("Message is NOT for this chat.");
       }
     };
   
@@ -96,7 +96,7 @@ export default function MessagesPage() {
           sender: res.data.sender._id || user.id,
         };
 
-        console.log("📤 Sending message via socket:", msg);
+        // console.log("Sending message via socket:", msg);
         setMessages((prev) => [...prev, msg]);
         socket.emit("send_message", msg);
         setNewMessage("");
@@ -108,11 +108,11 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!user || !partnerName || messages.length === 0) return;
 
-    console.log("🔎 Conversation Debug Info:");
-    console.log("Current User:", { id: user.id, name: user.name });
-    console.log("Talking To:", { id: userId, name: partnerName });
-    console.log("Total Messages:", messages.length);
-    console.log("Last Message:", messages[messages.length - 1]);
+    // console.log("Conversation Debug Info:");
+    // console.log("Current User:", { id: user.id, name: user.name });
+    // console.log("Talking To:", { id: userId, name: partnerName });
+    // console.log("Total Messages:", messages.length);
+    // console.log("Last Message:", messages[messages.length - 1]);
   }, [user, partnerName, messages]);
 
   if (!user || !socket) {

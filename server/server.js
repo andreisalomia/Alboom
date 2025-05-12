@@ -15,32 +15,32 @@ app.use(cors());
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB error:", err));
 
 io.on('connection', (socket) => {
-  console.log("🆕 New socket connected:", socket.id);
+  console.log("New socket connected:", socket.id);
 
   socket.on('register', (userId) => {
     if (userId) {
       socket.join(userId);
-      console.log(`✅ User ${userId} joined room [socket: ${socket.id}]`);
+      console.log(`User ${userId} joined room [socket: ${socket.id}]`);
     } else {
-      console.warn("⚠️ register called with invalid userId:", userId);
+      console.warn("register called with invalid userId:", userId);
     }
   });
 
-  socket.on("send_message", (msg) => {
-    if (msg?.recipient && msg?.sender && msg?.content) {
-      console.log(`📤 Message from ${msg.sender} to ${msg.recipient}:`, msg.content);
-      io.to(msg.recipient).emit("receive_message", msg);
-    } else {
-      console.warn("⚠️ Invalid message payload:", msg);
-    }
-  });
+  // socket.on("send_message", (msg) => {
+  //   if (msg?.recipient && msg?.sender && msg?.content) {
+  //     console.log(`Message from ${msg.sender} to ${msg.recipient}:`, msg.content);
+  //     io.to(msg.recipient).emit("receive_message", msg);
+  //   } else {
+  //     console.warn("Invalid message payload:", msg);
+  //   }
+  // });
 
   socket.on('disconnect', () => {
-    console.log(`🔌 Socket disconnected: ${socket.id}`);
+    console.log(`Socket disconnected: ${socket.id}`);
   });
 });
 
@@ -58,5 +58,5 @@ app.use('/api/users', require('./routes/users'));
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });

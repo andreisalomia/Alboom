@@ -12,19 +12,19 @@ export function SocketProvider({ children }) {
 
   useEffect(() => {
     socketRef.current = io();
-    console.log("🔌 Socket.IO initialized");
+    console.log("Socket.IO initialized");
 
     socketRef.current.on("connect", () => {
-      console.log("🟢 Socket connected:", socketRef.current.id);
+      console.log("Socket connected:", socketRef.current.id);
     });
 
     socketRef.current.on("disconnect", () => {
-      console.warn("🔴 Socket disconnected");
+      console.warn("Socket disconnected");
     });
 
     // Global handler
     socketRef.current.on("receive_message", (msg) => {
-      console.log("📥 GLOBAL SOCKET MESSAGE:", msg);
+      // console.log("GLOBAL SOCKET MESSAGE:", msg);
       // Dispatch custom event to notify other components (optional)
       window.dispatchEvent(new CustomEvent("socket:receive_message", { detail: msg }));
     });
@@ -33,14 +33,14 @@ export function SocketProvider({ children }) {
 
     return () => {
       socketRef.current?.disconnect();
-      console.log("🔌 Socket.IO disconnected");
+      console.log("Socket.IO disconnected");
     };
   }, []);
 
   useEffect(() => {
     if (user?.id && socketRef.current && socketReady) {
       socketRef.current.emit("register", user.id);
-      console.log("📡 Registered socket for user:", user.id);
+      console.log("Registered socket for user:", user.id);
     }
   }, [user, socketReady]);
 
