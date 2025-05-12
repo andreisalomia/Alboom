@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');   
+const path = require('path');
 const User = require('../models/User');
 const Playlist = require('../models/Playlist');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -23,8 +23,8 @@ mongoose.connection.once('open', () => {
 
 router.get('/:userId', async (req, res) => {
   try {
-    const requestingUserId = req.headers.authorization ? 
-      jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET)?.id : 
+    const requestingUserId = req.headers.authorization ?
+      jwt.verify(req.headers.authorization.split(' ')[1], process.env.JWT_SECRET)?.id :
       null;
 
     const selectFields = requestingUserId === req.params.userId
@@ -229,5 +229,59 @@ router.patch('/me', authMiddleware, upload.single('avatar'), async (req, res) =>
     res.status(400).json({ message: err.message || 'Unknown error' });
   }
 })
+
+router.get('/me/favorites', authMiddleware, async (req, res) => {
+  try {
+    const user = await User
+      .findById(req.user.id)
+      .populate({
+        path: 'favoriteSongs',
+        populate: { path: 'artist', select: 'name' }
+      });
+    res.json(user.favoriteSongs);
+  } catch (err) {
+    console.error('Fetching favorites failed:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// POST /api/users/me/favorites
+router.post('/me/favorites', authMiddleware, async (req, res) => {
+  const { songId } = req.body;
+  if (!songId) {
+    return res.status(400).json({ message: 'songId is required' });
+  }
+  try {
+    const user = await User.findById(req.user.id);
+    // evităm duplicatele
+    if (!user.favoriteSongs.includes(songId)) {
+      user.favoriteSongs.push(songId);
+      await user.save();
+    }
+    res.status(201).json({ favoriteSongs: user.favoriteSongs });
+  } catch (err) {
+    console.error('Adding favorite failed:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/users/me/favorites/:songId
+router.delete('/me/favorites/:songId', authMiddleware, async (req, res) => {
+  const { songId } = req.params;
+  try {
+    const user = await User.findById(req.user.id);
+    user.favoriteSongs = user.favoriteSongs.filter(
+      id => id.toString() !== songId
+    );
+    await user.save();
+    res.json({ favoriteSongs: user.favoriteSongs });
+  } catch (err) {
+    console.error('Removing favorite failed:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 module.exports = router

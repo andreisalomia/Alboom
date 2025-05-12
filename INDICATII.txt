@@ -12,3 +12,7 @@ De implementat bara de search care duce la pagini si implementat un filtru basic
 De facut o caseta cu evenimente tot pe main page.
 
 bafta! :D
+
+ATENTIE
+daca va da eroare mai trebuie data si comanda
+npm install react-icons
