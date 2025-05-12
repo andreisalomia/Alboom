@@ -16,6 +16,7 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import VerifyCodeForm from './components/VerifyCodeForm';
 import MessagesPage from './components/MessagesPage';
+import { SocketProvider } from './contexts/SocketContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -67,10 +68,12 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
+      <SocketProvider>
       <NotificationProvider>
         <ToastContainer position="bottom-right" autoClose={3000} />
         <AppContent />
       </NotificationProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

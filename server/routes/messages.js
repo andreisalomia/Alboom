@@ -97,7 +97,8 @@ router.post('/', auth, async (req, res) => {
   if (io) {
     io.to(recipientId).emit('receive_message', {
       ...message.toObject(),
-      senderName: message.sender.name  // 🔥 Add senderName
+      sender: message.sender._id.toString(),      // 🔧 important
+      senderName: message.sender.name
     });
   }
 

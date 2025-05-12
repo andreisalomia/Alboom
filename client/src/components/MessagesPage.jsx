@@ -1,150 +1,189 @@
 import { useEffect, useState, useRef } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { useParams } from "react-router-dom";
-import io from "socket.io-client";
+import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
-import { useNotifications } from "../contexts/NotificationContext";
-
-const socket = io("http://localhost:5000");
+import { useSocket } from "../contexts/SocketContext";
 
 export default function MessagesPage() {
   const { user } = useAuth();
-  const { userId: selectedUserId } = useParams();
+  const { userId } = useParams();
   const [messages, setMessages] = useState([]);
-  const [newMsg, setNewMsg] = useState("");
-  const chatRef = useRef(null);
-  const { clearNotifications } = useNotifications();
+  const [newMessage, setNewMessage] = useState("");
+  const [partnerName, setPartnerName] = useState("Loading...");
+  const messagesEndRef = useRef(null);
+  const socket = useSocket();
 
-  const isSentByMe = (msg) =>
-    msg.sender === user.id || msg.sender?._id === user.id;
-
+  // Socket registration
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && socket) {
+      console.log("📡 Registering user on socket:", user.id);
       socket.emit("register", user.id);
     }
-  }, [user?.id]);
+  }, [user, socket]);
 
+  // Get partner name
   useEffect(() => {
-    clearNotifications();
-  }, [selectedUserId]);
-
-  useEffect(() => {
-    const handleMessage = (msg) => {
-      if (
-        (msg.sender === selectedUserId || msg.sender?._id === selectedUserId) ||
-        (msg.recipient === selectedUserId || msg.recipient?._id === selectedUserId)
-      ) {
-        if (!isSentByMe(msg)) {
-          setMessages((prev) => [...prev, msg]);
-        }
-      }
-    };
-
-    socket.on("receive_message", handleMessage);
-    return () => socket.off("receive_message", handleMessage);
-  }, [selectedUserId]);
-
-  useEffect(() => {
-    if (!selectedUserId) return;
     axios
-      .get(`/api/messages/${selectedUserId}`, {
+      .get(`/api/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((res) => setPartnerName(res.data.name))
+      .catch(() => setPartnerName("Unknown"));
+  }, [userId]);
+
+  // Get conversation history
+  useEffect(() => {
+    if (!user) return;
+    axios
+      .get(`/api/messages/${userId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
       .then((res) => setMessages(res.data))
-      .catch(() => alert("Could not load messages"));
-  }, [selectedUserId]);
+      .catch(() => alert("Failed to load messages"));
+  }, [userId, user]);
 
+  // Socket listener for incoming messages
   useEffect(() => {
-    chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
+    if (!user) return;
+  
+    const handler = (e) => {
+      const msg = e.detail;
+      console.log("📥 [MessagesPage] Received message:", msg);
+  
+      const inCurrentChat =
+        (String(msg.sender) === userId && msg.recipient === user.id) ||
+        (msg.sender === user.id && String(msg.recipient) === userId);
+  
+      if (inCurrentChat) {
+        console.log("✅ Message is for this chat. Appending to UI.");
+        setMessages((prev) => [...prev, msg]);
+      } else {
+        console.log("⚠️ Message is NOT for this chat.");
+      }
+    };
+  
+    window.addEventListener("socket:receive_message", handler);
+    return () => window.removeEventListener("socket:receive_message", handler);
+  }, [user, userId]);
+  
+
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!newMsg.trim()) return;
+  // Send message
+  const sendMessage = () => {
+    if (!newMessage.trim()) return;
 
-    try {
-      const { data } = await axios.post(
+    axios
+      .post(
         "/api/messages",
-        {
-          recipientId: selectedUserId,
-          content: newMsg,
-        },
+        { recipientId: userId, content: newMessage },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
-      );
+      )
+      .then((res) => {
+        const msg = {
+          ...res.data,
+          sender: res.data.sender._id || user.id,
+        };
 
-      socket.emit("send_message", data);
-      setMessages((prev) => [...prev, data]);
-      setNewMsg("");
-    } catch {
-      alert("Failed to send message");
-    }
+        console.log("📤 Sending message via socket:", msg);
+        setMessages((prev) => [...prev, msg]);
+        socket.emit("send_message", msg);
+        setNewMessage("");
+      })
+      .catch(() => alert("Failed to send message"));
   };
 
+  // Debug info
+  useEffect(() => {
+    if (!user || !partnerName || messages.length === 0) return;
+
+    console.log("🔎 Conversation Debug Info:");
+    console.log("Current User:", { id: user.id, name: user.name });
+    console.log("Talking To:", { id: userId, name: partnerName });
+    console.log("Total Messages:", messages.length);
+    console.log("Last Message:", messages[messages.length - 1]);
+  }, [user, partnerName, messages]);
+
+  if (!user || !socket) {
+    return <div style={{ textAlign: "center", marginTop: "2rem" }}>Loading chat...</div>;
+  }
+
   return (
-    <div
-      style={{
-        maxWidth: 800,
-        margin: "2rem auto",
-        padding: "1rem",
-        border: "1px solid #ccc",
-        borderRadius: 8,
-        display: "flex",
-        flexDirection: "column",
-        height: "75vh",
-      }}
-    >
+    <div style={{ padding: "2rem", maxWidth: "700px", margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
+        Chat with {partnerName}
+      </h2>
+
       <div
-        ref={chatRef}
         style={{
-          flex: 1,
-          overflowY: "auto",
+          border: "1px solid #ccc",
           padding: "1rem",
-          borderBottom: "1px solid #ddd",
+          borderRadius: "8px",
+          height: "400px",
+          overflowY: "auto",
+          marginBottom: "1rem",
         }}
       >
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: isSentByMe(m) ? "right" : "left",
-              marginBottom: "0.5rem",
-            }}
-          >
+        {messages.map((msg) => {
+          const isMine = String(msg.sender) === String(user.id);
+          return (
             <div
+              key={msg._id}
               style={{
-                display: "inline-block",
-                background: isSentByMe(m) ? "#007bff" : "#e9ecef",
-                color: isSentByMe(m) ? "white" : "black",
-                padding: "0.5rem 1rem",
-                borderRadius: "20px",
-                maxWidth: "70%",
+                textAlign: isMine ? "right" : "left",
+                marginBottom: "0.5rem",
               }}
             >
-              {m.content}
+              <div
+                style={{
+                  display: "inline-block",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "1rem",
+                  backgroundColor: isMine ? "#d1e7dd" : "#f8d7da",
+                  maxWidth: "75%",
+                  wordBreak: "break-word",
+                }}
+              >
+                {msg.content}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+        <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
         <input
-          value={newMsg}
-          onChange={(e) => setNewMsg(e.target.value)}
-          placeholder="Type your message..."
-          style={{ flex: 1, padding: "0.5rem", borderRadius: 4 }}
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          style={{
+            flex: 1,
+            padding: "0.5rem",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+          }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button
           onClick={sendMessage}
           style={{
             padding: "0.5rem 1rem",
-            borderRadius: 4,
+            borderRadius: "8px",
             background: "#007bff",
-            color: "white",
+            color: "#fff",
             border: "none",
           }}
         >

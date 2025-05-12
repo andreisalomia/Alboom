@@ -22,7 +22,8 @@ export function NotificationProvider({ children }) {
           audio.play().catch(() => {});
 
           toast.info(`New message from ${msg.senderName || "someone"}`, {
-            icon: "💬"
+            icon: "💬",
+            autoClose: 5000
           });
         }
       };
