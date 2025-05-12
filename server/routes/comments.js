@@ -32,11 +32,12 @@ router.post('/', authMiddleware, async (req, res) => {
       content,
       author: req.user.id
     });
+
     await comment.save();
-    const populated = await comment
-      .populate('author', 'name profileImage')
-      .execPopulate();
-    res.status(201).json(populated);
+
+    
+    const populated = await comment.populate('author', 'name profileImage'); 
+    res.status(201).json(populated); 
   } catch (err) {
     console.error('Failed to post comment:', err);
     res.status(500).json({ message: 'Failed to post comment' });
@@ -48,10 +49,11 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
     if (comment.author.toString() !== req.user.id && req.user.role === 'authenticated_user') {
       return res.status(403).json({ message: 'Not authorized' });
     }
-    await comment.remove();
+    await Comment.deleteOne({ _id: req.params.id });  
     res.json({ message: 'Comment deleted' });
   } catch (err) {
     console.error('Failed to delete comment:', err);
@@ -64,12 +66,19 @@ router.post('/:id/like', authMiddleware, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
     const uid = req.user.id;
-    if (!comment.likes.includes(uid)) {
+
+    
+    if (comment.likes.includes(uid)) {
+      comment.likes = comment.likes.filter(like => like.toString() !== uid);
+    } else {
+      
       comment.likes.push(uid);
-      comment.dislikes = comment.dislikes.filter(d => d.toString() !== uid);
-      await comment.save();
+      comment.dislikes = comment.dislikes.filter(dislike => dislike.toString() !== uid);
     }
+
+    await comment.save();
     res.json({ likes: comment.likes.length, dislikes: comment.dislikes.length });
   } catch (err) {
     console.error('Failed to like comment:', err);
@@ -82,16 +91,44 @@ router.post('/:id/dislike', authMiddleware, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
     const uid = req.user.id;
-    if (!comment.dislikes.includes(uid)) {
+
+   
+    if (comment.dislikes.includes(uid)) {
+      comment.dislikes = comment.dislikes.filter(dislike => dislike.toString() !== uid);
+    } else {
+      
       comment.dislikes.push(uid);
-      comment.likes = comment.likes.filter(l => l.toString() !== uid);
-      await comment.save();
+      comment.likes = comment.likes.filter(like => like.toString() !== uid);
     }
+
+    await comment.save();
     res.json({ likes: comment.likes.length, dislikes: comment.dislikes.length });
   } catch (err) {
     console.error('Failed to dislike comment:', err);
     res.status(500).json({ message: 'Failed to dislike comment' });
+  }
+});
+
+router.put('/:id', authMiddleware, async (req, res) => {
+  try {
+    const { content } = req.body;
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ message: 'Comment not found' });
+
+    if (comment.author.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to edit this comment' });
+    }
+
+    comment.content = content;
+    await comment.save();
+
+    const populated = await comment.populate('author', 'name profileImage');
+    res.json(populated);
+  } catch (err) {
+    console.error('Failed to edit comment:', err);
+    res.status(500).json({ message: 'Failed to edit comment' });
   }
 });
 

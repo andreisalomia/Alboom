@@ -1,12 +1,11 @@
-// client/src/components/CommentSection.jsx
-
 import { useState, useEffect } from 'react';
 import {
   getComments,
   postComment,
   deleteComment,
   likeComment,
-  dislikeComment
+  dislikeComment,
+  editComment
 } from '../api/comments';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,12 +13,15 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
   const [comments, setComments] = useState([]);
   const [newContent, setNewContent] = useState('');
   const [replyTo, setReplyTo] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);  // Track the comment being edited
   const navigate = useNavigate();
 
   const load = () =>
     getComments(targetType, targetId).then(res => setComments(res.data));
 
-  useEffect(() => { load(); }, [targetType, targetId]);
+  useEffect(() => {
+    getComments(targetType, targetId).then(res => setComments(res.data));
+  }, [targetType, targetId]);
 
   const handlePost = async () => {
     if (!newContent.trim()) return;
@@ -27,9 +29,38 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
     setNewContent(''); setReplyTo(null); load();
   };
 
-  const handleDelete = async (id) => { await deleteComment(id); load(); };
-  const handleLike   = async (id) => { await likeComment(id);   load(); };
-  const handleDislike= async (id) => { await dislikeComment(id);load(); };
+  const handleDelete = async (id) => { 
+    await deleteComment(id); 
+    load(); 
+  };
+
+  const handleLike = async (id) => {
+    try {
+      await likeComment(id);  
+      load(); 
+    } catch (error) {
+      console.error('Failed to like comment:', error);
+    }
+  };
+
+  const handleDislike = async (id) => {
+    try {
+      await dislikeComment(id);  
+      load();  
+    } catch (error) {
+      console.error('Failed to dislike comment:', error);
+    }
+  };
+
+  const handleEdit = async (id, content) => {
+    try {
+      await editComment(id, content);
+      setEditingCommentId(null);  // Hide the edit box after saving
+      load();  // Reload the comments
+    } catch (error) {
+      console.error('Failed to edit comment:', error);
+    }
+  };
 
   // build nested tree
   const tree = [];
@@ -41,7 +72,6 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
   });
 
   const renderNode = (c, depth = 0) => {
-    // compute avatar URL exactly as in UserProfile
     const avatarSrc = c.author.profileImage
       ? `/api/users/avatar/${c.author.profileImage}`
       : null;
@@ -97,36 +127,60 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
           </span>
         </div>
 
-        <p style={{ margin: '4px 0 8px' }}>{c.content}</p>
-
-        <small>
-          👍 {c.likes.length} &nbsp; 👎 {c.dislikes.length}
-        </small>
-
-        <div style={{ marginTop: '4px' }}>
-          {currentUser && (
-            <>
-              <button onClick={() => handleLike(c._id)}>Like</button>
-              <button onClick={() => handleDislike(c._id)}>Dislike</button>
-              <button onClick={() => setReplyTo(c._id)}>Reply</button>
-              {(currentUser.id === c.author._id ||
-                ['moderator','admin'].includes(currentUser.role)) && (
-                <button onClick={() => handleDelete(c._id)}>Delete</button>
-              )}
-            </>
-          )}
-        </div>
-
-        {replyTo === c._id && (
-          <div style={{ marginTop: 8 }}>
+        {editingCommentId === c._id ? (
+          <div>
             <textarea
-              rows={2}
+              rows={3}
               style={{ width: '100%', boxSizing: 'border-box' }}
               value={newContent}
               onChange={e => setNewContent(e.target.value)}
             />
-            <button onClick={handlePost}>Post reply</button>
+            <button onClick={() => handleEdit(c._id, newContent)}>Save Edit</button>
+            <button onClick={() => setEditingCommentId(null)}>Cancel</button>
           </div>
+        ) : (
+          <>
+            <p style={{ margin: '4px 0 8px' }}>{c.content}</p>
+            <small>
+            <span role="img" aria-label="thumbs-up">👍 {c.likes.length} </span>
+            <span role="img" aria-label="thumbs-down">👎 {c.dislikes.length}</span>
+            </small>
+            <div style={{ marginTop: '4px' }}>
+              {currentUser && (
+                <>
+                  <button onClick={() => handleLike(c._id)}>Like</button>
+                  <button onClick={() => handleDislike(c._id)}>Dislike</button>
+                  <button onClick={() => setReplyTo(c._id)}>Reply</button>
+
+                  {/* Edit button: Only show if the logged-in user is the author of the comment */}
+                  {currentUser.id === c.author._id && (
+                    <button onClick={() => { 
+                      setEditingCommentId(c._id); 
+                      setNewContent(c.content); 
+                    }}>
+                      Edit
+                    </button>
+                  )}
+
+                  {/* Delete button: Only show if the logged-in user is the author or admin */}
+                  {(currentUser.id === c.author._id || ['moderator', 'admin'].includes(currentUser.role)) && (
+                    <button onClick={() => handleDelete(c._id)}>Delete</button>
+                  )}
+                </>
+              )}
+            </div>
+            {replyTo === c._id && (
+              <div style={{ marginTop: 8 }}>
+                <textarea
+                  rows={2}
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                  value={newContent}
+                  onChange={e => setNewContent(e.target.value)}
+                />
+                <button onClick={handlePost}>Post reply</button>
+              </div>
+            )}
+          </>
         )}
 
         {c.replies.map(r => renderNode(r, depth + 1))}
