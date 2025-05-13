@@ -1,46 +1,41 @@
-// export default function ProfileFavoriteSongs() {
-//     return (
-//         <div>
-//             melodii
-//         </div>
-//     )
-// }
-
-// client/src/components/ProfileFavoriteSongs.jsx
-
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useProfile } from "../contexts/ProfileContext";
 
 export default function ProfileFavoriteSongs() {
+  const { currentUser, userData } = useProfile();
   const [favorites, setFavorites] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("/api/users/me/favorites", {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-    })
-    .then(res => {
-      // res.data poate fi array de song objects { _id, title, artist: { name } }
-      setFavorites(res.data);
-    })
-    .catch(console.error);
-  }, []);
+    if (!userData) return;
+
+    const isOwnProfile = currentUser && userData._id === currentUser._id;
+
+    if (isOwnProfile) {
+      axios
+        .get("/api/users/me/favorites", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        })
+        .then(res => setFavorites(res.data))
+        .catch(console.error);
+    } else {
+      // API populates favoriteSongs on other users' profiles too
+      setFavorites(userData.favoriteSongs || []);
+    }
+  }, [userData, currentUser]);
 
   return (
     <div style={{ padding: "1rem" }}>
       <h2>Favorite Songs</h2>
       {favorites.length === 0 ? (
-        <p>Nu ai melodii favorite.</p>
+        <p>Nu există melodii favorite.</p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0 }}>
           {favorites.map(song => (
-            <li
-              key={song._id}
-              style={{ margin: "0.5rem 0", cursor: "pointer" }}
-              onClick={() => navigate(`/track/${song._id}`)}
-            >
-              {song.title} — {song.artist.name}
+            <li key={song._id}>
+              <Link to={`/song/${song._id}`}>{song.title}</Link>
             </li>
           ))}
         </ul>
