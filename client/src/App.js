@@ -19,6 +19,7 @@ import MessagesPage from './components/MessagesPage';
 import { SocketProvider } from './contexts/SocketContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import EventDetail from './components/EventDetail';
 
 function LoginPage() {
   const { login } = useAuth();
@@ -53,6 +54,7 @@ function AppContent() {
         <Route path="/song/:id" element={<SongDetail />} />
         <Route path="/album/:id" element={<AlbumDetail />} />
         <Route path="/artist/:id" element={<ArtistDetail />} />
+        <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/messages" element={<MessagesOverview />} />
         <Route path="/messages/:userId" element={<MessagesPage />} />
         <Route path="/profile/:userId/*" element={<UserProfile />} />

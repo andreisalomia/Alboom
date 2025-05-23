@@ -8,17 +8,21 @@ export default function MusicFeed({ refreshTrigger }) {
     const [albums, setAlbums] = useState([]);
     const [artists, setArtists] = useState([]);
     const [songs, setSongs] = useState([]);
+    const [events, setEvents] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            const [albumsRes, artistsRes, songsRes] = await Promise.all([
+            const [albumsRes, artistsRes, songsRes, eventsRes] = await Promise.all([
                 axios.get("api/music/albums"),
                 axios.get("api/music/artists"),
                 axios.get("api/music/songs"),
+                axios.get("api/music/events"),
+
             ]);
             setAlbums(albumsRes.data);
             setArtists(artistsRes.data);
             setSongs(songsRes.data);
+            setEvents(eventsRes.data);
         };
 
         fetchData();
@@ -103,7 +107,30 @@ export default function MusicFeed({ refreshTrigger }) {
                     </Link>
                 ))}
             </div>
+
+            {/*📅 Upcoming Events*/}
+            <h2 style={{ marginTop: "2rem" }}>📅 Upcoming Events</h2>
+            <div style={styles.container}>
+                {events.map((ev) => (
+                    <Link to={`/event/${ev._id}`}  key={ev._id} style={styles.link}>
+                    <div style={styles.card}>
+                        <h4>{ev.title}</h4>
+                        <p>
+                            {new Date(ev.date).toLocaleDateString("ro-RO", {
+                                day: "2-digit",
+                                month: "short",
+                                year:  "numeric",
+                                hour:  "2-digit",
+                                minute:"2-digit",
+                            })}
+                        </p>
+                        <p>{ev.location}</p>
+                    </div>
+                    </Link>
+                ))}
+            </div>
         </div>
+
     );
 }
 

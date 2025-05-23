@@ -5,6 +5,7 @@ import AddArtistModal from "./AddArtistModal";
 import AddAlbumModal from "./AddAlbumModal";
 import AddSongModal from "./AddSongModal";
 import { useAuth } from "../contexts/AuthContext";
+import AddEventModal from "./AddEventModal";
 
 export default function Dashboard({ onRefresh }) {
   const [modal, setModal] = useState(null); // 'song' | 'album' | 'artist'
@@ -30,6 +31,9 @@ export default function Dashboard({ onRefresh }) {
             <button onClick={() => setModal("artist")} style={{ marginLeft: "1rem" }}>
               Add Artist
             </button>
+            <button onClick={() => setModal("event")} style={{ marginLeft: "1rem" }}>
+              Add Event
+            </button>
           </div>
 
           <div style={{ marginTop: "2rem" }}>
@@ -39,6 +43,9 @@ export default function Dashboard({ onRefresh }) {
             </button>
             <button onClick={() => setDeleteModal("artist")} style={{ marginLeft: "1rem" }}>
               Delete Artist
+            </button>
+            <button onClick={() => setDeleteModal("event")} style={{ marginLeft: "1rem" }}>
+              Delete Event
             </button>
           </div>
         </>
@@ -64,6 +71,16 @@ export default function Dashboard({ onRefresh }) {
       )}
       {modal === "song" && (
         <AddSongModal
+          onClose={closeModal}
+          onCreated={() => {
+            closeModal();
+            onRefresh();
+          }}
+        />
+      )}
+
+      {modal === "event" && (
+        <AddEventModal
           onClose={closeModal}
           onCreated={() => {
             closeModal();

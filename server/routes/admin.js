@@ -6,6 +6,7 @@ const Album = require('../models/Album');
 const Song = require('../models/Song');
 const Comment = require('../models/Comment');
 const Review = require('../models/Review');
+const Event = require('../models/Event');
 
 const onlyAdmin = (req, res, next) =>
     req.user?.role === 'admin'
@@ -15,12 +16,20 @@ const onlyAdmin = (req, res, next) =>
 router.use(auth, onlyAdmin);
 
 router.post('/artists', async (req, res) => {
-    
+
     const { name, bio, image } = req.body;
     const existing = await Artist.findOne({ name });
     if (existing) return res.json(existing);
     const artist = await Artist.create({ name, bio, image });
     res.status(201).json(artist);
+});
+
+router.post('/events', async (req, res) => {
+
+    const { title, date, location, organizer } = req.body;
+    const newEvent = await Event.create({ title, date, location, organizer });
+    res.status(201).json(newEvent);
+
 });
 
 router.post('/albums', async (req, res) => {
@@ -74,6 +83,9 @@ router.post('/songs', async (req, res) => {
 
     res.status(201).json(await song.populate(['artist', 'album']));
 });
+
+
+
 
 router.delete('/songs/:id', async (req, res) => {
     const song = await Song.findById(req.params.id);
@@ -138,6 +150,17 @@ router.delete('/artists/:id', async (req, res) => {
 });
 
 
+
+router.delete('/events/:id', async (req, res) => {
+  try {
+    const deleted = await Event.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'Event not found' });
+    res.json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+});
 
 
 module.exports = router;
