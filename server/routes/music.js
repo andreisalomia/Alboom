@@ -4,8 +4,14 @@ const Album = require('../models/Album');
 const Song = require('../models/Song');
 const User = require('../models/User');
 const Event = require('../models/Event');
-
+const auth   = require('../middleware/authMiddleware');
 const router = express.Router();
+
+const onlyAuth = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: 'Authentication required' });
+  next();
+};
+
 
 router.get('/artists', async (req, res) => {
   const artists = await Artist.find();
@@ -115,9 +121,97 @@ router.get('/events/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+/// POST  /events/:id/participate
+//    adaugă utilizatorul curent în lista de participanți (o singură dată)
+router.post(
+  '/events/:id/participate',
+  auth,
+  onlyAuth,
+  async (req, res) => {
+    try {
+      const ev = await Event.findById(req.params.id);
+      if (!ev) return res.status(404).json({ message: 'Event not found' });
 
+      const userId = String(req.user.id || req.user._id);
 
+      // folosim some + toString pentru a evita duplicate
+      const exists = ev.participants.some(pid => String(pid) === userId);
+      if (exists) {
+        return res.status(400).json({ message: 'Already participating' });
+      }
+
+      ev.participants.push(userId);
+      await ev.save();
+
+      return res.json({ participantsCount: ev.participants.length });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// DELETE /events/:id/participate
+//    scoate utilizatorul curent din lista de participanți
+router.delete(
+  '/events/:id/participate',
+  auth,
+  onlyAuth,
+  async (req, res) => {
+    try {
+      const ev = await Event.findById(req.params.id);
+      if (!ev) return res.status(404).json({ message: 'Event not found' });
+
+      const userId = String(req.user.id || req.user._id);
+
+      ev.participants = ev.participants
+        .filter(pid => pid && String(pid) !== userId);
+
+      await ev.save();
+      return res.json({ participantsCount: ev.participants.length });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// GET  /events/:id/participants
+router.get(
+  '/events/:id/participants',
+  auth,
+  onlyAuth,
+  async (req, res) => {
+    try {
+      const ev = await Event.findById(req.params.id).populate('participants', 'name email');
+      if (!ev) return res.status(404).json({ message: 'Event not found' });
+
+      return res.json({ participants: ev.participants });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// GET /events/user/:userId
+// → toate evenimentele unde participants include userId
+router.get(
+  '/events/user/:userId',
+  auth,
+  onlyAuth,
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
+      // găsim evenimentele la care participă
+      const events = await Event.find({ participants: userId });
+      return res.json(events);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+);
 
 
 const escape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');   // scăpăm regex-ul

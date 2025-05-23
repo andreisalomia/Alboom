@@ -10,7 +10,7 @@ import ProfilePlaylists from "./ProfilePlaylists";
 import ProfileFavoriteSongs from "./ProfileFavoriteSongs";
 import ProfileSettings from "./ProfileSettings";
 import ProfileFriends from "./ProfileFriends";
-
+import ProfileEvents from "./ProfileEvents";
 import { useAuth } from "../contexts/AuthContext";
 import { ProfileProvider } from "../contexts/ProfileContext";
 
@@ -101,6 +101,16 @@ export default function UserProfile() {
           </button>
           {isOwnProfile && (
             <button
+              className={`nav-item ${currentPath === 'events' ? 'active' : ''}`}
+              onClick={() => navigateToSection('events')}
+            >
+              Events
+            </button>
+          )}
+
+
+          {isOwnProfile && (
+            <button
               className={`nav-item at-bottom ${
                 currentPath === "settings" ? "active" : ""
               }`}
@@ -120,8 +130,10 @@ export default function UserProfile() {
               <Route path="playlists" element={<ProfilePlaylists />} />
               <Route path="songs" element={<ProfileFavoriteSongs />} />
               <Route path="friends" element={<ProfileFriends />} />
+              <Route path="events" element={<ProfileEvents />} />
               <Route path="settings" element={<ProfileSettings />} />
               <Route path="*" element={<ProfileOverview />} />
+
             </Routes>
           </ProfileProvider>
         </div>
