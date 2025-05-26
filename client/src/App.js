@@ -16,6 +16,8 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import VerifyCodeForm from './components/VerifyCodeForm';
 import MessagesPage from './components/MessagesPage';
+import ThreadsPage from './components/ThreadsPage';
+import ThreadDetail from './components/ThreadDetail';
 import { SocketProvider } from './contexts/SocketContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -52,9 +54,9 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/song/:id" element={<SongDetail />} />
-        <Route path="/album/:id" element={<AlbumDetail />} />
-        <Route path="/artist/:id" element={<ArtistDetail />} />
-        <Route path="/event/:id" element={<EventDetail />} />
+        <Route path="/album/:id" element={<AlbumDetail />} />        <Route path="/artist/:id" element={<ArtistDetail />} />        <Route path="/event/:id" element={<EventDetail />} />
+        <Route path="/threads" element={<ThreadsPage />} />
+        <Route path="/threads/:id" element={<ThreadDetail />} />
         <Route path="/messages" element={<MessagesOverview />} />
         <Route path="/messages/:userId" element={<MessagesPage />} />
         <Route path="/profile/:userId/*" element={<UserProfile />} />

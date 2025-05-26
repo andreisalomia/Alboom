@@ -54,6 +54,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/reviews', require('./routes/reviews'));
 app.use('/api/messages', require('./routes/messages'));
+app.use('/api/threads', require('./routes/threads'));
 app.use('/api/users', require('./routes/users'));
 //app.use('/api/events', require('./routes/events'));
 

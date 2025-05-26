@@ -64,12 +64,11 @@ export default function Navbar() {
                 <button onClick={() => setMenuOpen(false)} className="close-button">
                   <X size={32} />
                 </button>
-              </div>
-
-              <div className="menu-links">
+              </div>              <div className="menu-links">
                 <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
                 <Link to="/topsongs" onClick={() => setMenuOpen(false)}>Top Songs</Link>
                 <Link to="/artists" onClick={() => setMenuOpen(false)}>Artists</Link>
+                <Link to="/threads" onClick={() => setMenuOpen(false)}>Threads</Link>
 
                 {!user ? (
                   <>

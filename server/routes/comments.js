@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const Comment = require('../models/Comment');
+const Thread = require('../models/Thread');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // GET /api/comments?targetType=...&targetId=...
@@ -35,7 +36,13 @@ router.post('/', authMiddleware, async (req, res) => {
 
     await comment.save();
 
-    
+    // Update thread comment count if this is a thread comment
+    if (targetType === 'thread') {
+      await Thread.findByIdAndUpdate(targetId, {
+        $inc: { commentsCount: 1 }
+      });
+    }
+
     const populated = await comment.populate('author', 'name profileImage'); 
     res.status(201).json(populated); 
   } catch (err) {
@@ -53,6 +60,14 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (comment.author.toString() !== req.user.id && req.user.role === 'authenticated_user') {
       return res.status(403).json({ message: 'Not authorized' });
     }
+
+    // Update thread comment count if this is a thread comment
+    if (comment.targetType === 'thread') {
+      await Thread.findByIdAndUpdate(comment.targetId, {
+        $inc: { commentsCount: -1 }
+      });
+    }
+
     await Comment.deleteOne({ _id: req.params.id });  
     res.json({ message: 'Comment deleted' });
   } catch (err) {
