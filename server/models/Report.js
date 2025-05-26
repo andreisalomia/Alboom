@@ -5,6 +5,7 @@ const reportSchema = new mongoose.Schema({
   type: { type: String, enum: ['comment', 'review', 'thread', 'user'] },
   targetId: mongoose.Schema.Types.ObjectId,
   reason: String,
+  url: String,
   handled: { type: Boolean, default: false }
 }, { timestamps: true });
 

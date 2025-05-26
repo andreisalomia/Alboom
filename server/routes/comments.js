@@ -4,18 +4,33 @@ const router = express.Router();
 const Comment = require('../models/Comment');
 const Thread = require('../models/Thread');
 const authMiddleware = require('../middleware/authMiddleware');
+const Report = require('../models/Report'); // Add this at the top
 
-// GET /api/comments?targetType=...&targetId=...
+// GET /api/comments?targetType=...&targetId=...&userId=...
 router.get('/', async (req, res) => {
   try {
-    const { targetType, targetId } = req.query;
+    const { targetType, targetId, userId } = req.query;
     if (!targetType || !targetId) {
       return res.status(400).json({ message: 'Missing targetType or targetId' });
     }
     const comments = await Comment.find({ targetType, targetId })
       .sort({ createdAt: 1 })
       .populate('author', 'name profileImage');
-    res.json(comments);
+
+    let reportedCommentIds = [];
+    if (userId) {
+      const userReports = await Report.find({
+        reporter: userId,
+        type: 'comment',
+        targetId: { $in: comments.map(c => c._id) }
+      });
+      reportedCommentIds = userReports.map(r => r.targetId.toString());
+    }
+
+    res.json({
+      comments,
+      reportedCommentIds
+    });
   } catch (err) {
     console.error('Failed to load comments:', err);
     res.status(500).json({ message: 'Failed to load comments' });
@@ -144,6 +159,41 @@ router.put('/:id', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Failed to edit comment:', err);
     res.status(500).json({ message: 'Failed to edit comment' });
+  }
+});
+
+// POST /api/comments/:id/report
+router.post('/:id/report', authMiddleware, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const commentId = req.params.id;
+    const userId = req.user.id;
+
+    const existing = await Report.findOne({ reporter: userId, type: 'comment', targetId: commentId });
+    if (existing) return res.status(400).json({ message: 'Already reported' });
+
+    const report = new Report({
+      reporter: userId,
+      type: 'comment',
+      targetId: commentId,
+      reason: reason || ''
+    });
+    await report.save();
+    res.status(201).json({ message: 'Reported' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to report comment' });
+  }
+});
+
+// DELETE /api/comments/:id/report
+router.delete('/:id/report', authMiddleware, async (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+    await Report.deleteOne({ reporter: userId, type: 'comment', targetId: commentId });
+    res.json({ message: 'Report removed' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to remove report' });
   }
 });
 
