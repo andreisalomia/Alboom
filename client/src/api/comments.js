@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const BASE = '/api/comments';
 
-export const getComments   = (targetType, targetId) =>
-  axios.get(BASE, { params: { targetType, targetId } });
+export const getComments = (targetType, targetId, userId) =>
+  axios.get(BASE, { params: { targetType, targetId, userId } });
 
 export const postComment   = data =>
   axios.post(BASE, data, {

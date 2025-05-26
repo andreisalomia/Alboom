@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import CommentSection from './CommentSection';
+import ReportReasonModal from './ReportReasonModal';
+import { reportTarget, unreportTarget } from '../api/reports';
 
 export default function ThreadDetail() {
   const { id } = useParams();
@@ -12,10 +14,28 @@ export default function ThreadDetail() {
   const [error, setError] = useState(null);
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reported, setReported] = useState(false);
 
   useEffect(() => {
     fetchThread();
   }, [id]);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch(`/api/reports?type=thread&targetId=${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+        setReported(Array.isArray(data) ? data.some(r => r.reporter === user.id || r.reporter === user._id) : false);
+      } catch {
+        setReported(false);
+      }
+    };
+    fetchReports();
+  }, [id, user]);
 
   const fetchThread = async () => {
     try {
@@ -120,6 +140,21 @@ export default function ThreadDetail() {
     } catch (error) {
       alert('Error deleting thread');
     }
+  };
+
+  const handleOpenReportModal = () => setReportModalOpen(true);
+
+  const handleSendReport = async (reason) => {
+    await reportTarget('thread', id, window.location.pathname, reason);
+    setReportModalOpen(false);
+    setReported(true);
+  };
+
+  const handleCancelReport = () => setReportModalOpen(false);
+
+  const handleUnreport = async () => {
+    await unreportTarget('thread', id);
+    setReported(false);
   };
 
   const canDelete = user && thread && (
@@ -264,6 +299,38 @@ export default function ThreadDetail() {
               >
                 <span role="img" aria-label="thumbs-down">👎</span> {thread.dislikesCount || 0}
               </button>
+
+              {reported ? (
+                <button
+                  onClick={handleUnreport}
+                  style={{
+                    backgroundColor: '#bbb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.25rem 0.75rem',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Remove Report
+                </button>
+              ) : (
+                <button
+                  onClick={handleOpenReportModal}
+                  style={{
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.25rem 0.75rem',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Report Thread
+                </button>
+              )}
             </>
           )}
 
@@ -282,6 +349,12 @@ export default function ThreadDetail() {
         targetType="thread"
         targetId={id}
         currentUser={user}
+      />
+
+      <ReportReasonModal
+        open={reportModalOpen}
+        onSend={handleSendReport}
+        onCancel={handleCancelReport}
       />
     </div>
   );

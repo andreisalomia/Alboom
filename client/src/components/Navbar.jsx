@@ -104,6 +104,14 @@ export default function Navbar() {
                         </span>
                       )}
                     </Link>
+                    {(user.role === "admin" || user.role === "moderator") && (
+                      <Link
+                        to="/reports"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Reports
+                      </Link>
+                    )}
                     <button
                       onClick={() => { setMenuOpen(false); logout(); }}
                       className="logout-button"

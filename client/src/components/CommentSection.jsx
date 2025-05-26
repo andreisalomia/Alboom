@@ -7,37 +7,52 @@ import {
   dislikeComment,
   editComment
 } from '../api/comments';
+import { reportTarget, unreportTarget } from '../api/reports';
 import { useNavigate } from 'react-router-dom';
+import ReportReasonModal from './ReportReasonModal';
 
 export default function CommentSection({ targetType, targetId, currentUser }) {
   const [comments, setComments] = useState([]);
+  const [reportedCommentIds, setReportedCommentIds] = useState([]);
   const [newContent, setNewContent] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [editingCommentId, setEditingCommentId] = useState(null);  // Track the comment being edited
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportTargetId, setReportTargetId] = useState(null);
   const navigate = useNavigate();
 
   const load = () =>
-    getComments(targetType, targetId).then(res => setComments(res.data));
+    getComments(targetType, targetId, currentUser?.id).then(res => {
+      if (res.data.comments) {
+        setComments(res.data.comments);
+        setReportedCommentIds(res.data.reportedCommentIds || []);
+      } else {
+        setComments(res.data);
+        setReportedCommentIds([]);
+      }
+    });
 
   useEffect(() => {
-    getComments(targetType, targetId).then(res => setComments(res.data));
+    load();
   }, [targetType, targetId]);
 
   const handlePost = async () => {
     if (!newContent.trim()) return;
     await postComment({ targetType, targetId, parentId: replyTo, content: newContent });
-    setNewContent(''); setReplyTo(null); load();
+    setNewContent('');
+    setReplyTo(null);
+    load();
   };
 
-  const handleDelete = async (id) => { 
-    await deleteComment(id); 
-    load(); 
+  const handleDelete = async (id) => {
+    await deleteComment(id);
+    load();
   };
 
   const handleLike = async (id) => {
     try {
-      await likeComment(id);  
-      load(); 
+      await likeComment(id);
+      load();
     } catch (error) {
       console.error('Failed to like comment:', error);
     }
@@ -45,8 +60,8 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
 
   const handleDislike = async (id) => {
     try {
-      await dislikeComment(id);  
-      load();  
+      await dislikeComment(id);
+      load();
     } catch (error) {
       console.error('Failed to dislike comment:', error);
     }
@@ -62,10 +77,39 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
     }
   };
 
+  const handleReport = async (id) => {
+    const url = window.location.pathname;
+    await reportTarget('comment', id, url, '');
+    load();
+  };
+
+  const handleUnreport = async (id) => {
+    await unreportTarget('comment', id);
+    load();
+  };
+
+  const openReportModal = (id) => {
+    setReportTargetId(id);
+    setReportModalOpen(true);
+  };
+
+  const handleSendReport = async (reason) => {
+    const url = window.location.pathname;
+    await reportTarget('comment', reportTargetId, url, reason);
+    setReportModalOpen(false);
+    setReportTargetId(null);
+    load();
+  };
+
+  const handleCancelReport = () => {
+    setReportModalOpen(false);
+    setReportTargetId(null);
+  };
+
   // build nested tree
   const tree = [];
   const map = {};
-  comments.forEach(c => map[c._id] = { ...c, replies: [] });
+  comments.forEach(c => (map[c._id] = { ...c, replies: [] }));
   comments.forEach(c => {
     if (c.parentId) map[c.parentId]?.replies.push(map[c._id]);
     else tree.push(map[c._id]);
@@ -124,6 +168,14 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
           </strong>
           <span style={{ marginLeft: 8, color: '#666' }}>
             &middot; {new Date(c.createdAt).toLocaleString()}
+          </span>
+          <span style={{ marginLeft: 'auto' }}>
+            {currentUser &&
+              (reportedCommentIds.includes(c._id) ? (
+                <button onClick={() => handleUnreport(c._id)}>Remove Report</button>
+              ) : (
+                <button onClick={() => openReportModal(c._id)}>Report</button>
+              ))}
           </span>
         </div>
 
@@ -209,9 +261,13 @@ export default function CommentSection({ targetType, targetId, currentUser }) {
         <p>Log in to leave a comment.</p>
       )}
 
-      <div>
-        {tree.map(c => renderNode(c))}
-      </div>
+      <div>{tree.map(c => renderNode(c))}</div>
+
+      <ReportReasonModal
+        open={reportModalOpen}
+        onSend={handleSendReport}
+        onCancel={handleCancelReport}
+      />
     </div>
   );
 }
