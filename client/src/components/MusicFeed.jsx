@@ -3,6 +3,8 @@ import axios from "axios";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
 import { Link } from "react-router-dom";
+import SimpleSongCard from "./SongCard";
+import SimpleInfoCard from "./SimpleInfoCard";
 
 export default function MusicFeed({ refreshTrigger }) {
     const [albums, setAlbums] = useState([]);
@@ -40,93 +42,78 @@ export default function MusicFeed({ refreshTrigger }) {
         <div>
             {/* 🎧 Top 10 Songs */}
             <h2>🎧 Top 10 Songs</h2>
-            <div style={styles.container}>
+            <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "2.5rem 3rem", // mai mult spațiu între casete
+                justifyContent: "center",
+            }}>
                 {topSongs.map((song) => (
-                    <Link
-                        to={`/song/${song._id}`}
-                        key={song._id}
-                        style={styles.link}
-                    >
-                        <div style={styles.card}>
-                            <h4>{song.title}</h4>
-                            <p>Artist: {song.artist?.name}</p>
-                            <p>Album: {song.album?.title || "Single"}</p>
-                            <p>
-                                Duration: {Math.floor(song.duration / 60)}:
-                                {String(song.duration % 60).padStart(2, "0")}{" "}
-                                min
-                            </p>
-                        </div>
-                    </Link>
+                    <SimpleSongCard key={song._id} song={song} />
                 ))}
             </div>
 
             {/* 🌟 Weekly Artists */}
             <h2 style={{ marginTop: "2rem" }}>🌟 Weekly Artists</h2>
-            <div style={styles.container}>
+            <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "3rem 3.5rem",
+                justifyContent: "center",
+            }}>
                 {topArtists.map((artist) => (
-                    <Link
-                        to={`/artist/${artist._id}`}
+                    <SimpleInfoCard
                         key={artist._id}
-                        style={styles.link}
-                    >
-                        <div style={styles.card}>
-                            <LazyLoadImage
-                                src={artist.image}
-                                alt={artist.name}
-                                effect="blur"
-                                width="100%"
-                            />
-                            <h4>{artist.name}</h4>
-                            <p>{artist.bio?.substring(0, 60)}...</p>
-                        </div>
-                    </Link>
+                        to={`/artist/${artist._id}`}
+                        image={artist.image}
+                        title={artist.name}
+                        description={artist.bio?.substring(0, 60) + (artist.bio?.length > 60 ? "..." : "")}
+                    />
                 ))}
             </div>
 
             {/* 🆕 Recent Albums */}
             <h2 style={{ marginTop: "2rem" }}>🆕 Recent Albums</h2>
-            <div style={styles.container}>
+            <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "3rem 3.5rem",
+                justifyContent: "center",
+            }}>
                 {topAlbums.map((album) => (
-                    <Link
-                        to={`/album/${album._id}`}
+                    <SimpleInfoCard
                         key={album._id}
-                        style={styles.link}
-                    >
-                        <div style={styles.card}>
-                            <LazyLoadImage
-                                src={album.coverImage}
-                                alt={album.title}
-                                effect="blur"
-                                width="100%"
-                            />
-                            <h4>{album.title}</h4>
-                            <p>By: {album.artist?.name}</p>
-                            <p>Genre: {album.genre}</p>
-                        </div>
-                    </Link>
+                        to={`/album/${album._id}`}
+                        image={album.coverImage}
+                        title={album.title}
+                        subtitle={album.artist?.name ? `By: ${album.artist.name}` : ""}
+                        description={`Genre: ${album.genre}`}
+                    />
                 ))}
             </div>
 
-            {/*📅 Upcoming Events*/}
+            {/* 📅 Upcoming Events */}
             <h2 style={{ marginTop: "2rem" }}>📅 Upcoming Events</h2>
-            <div style={styles.container}>
+            <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "3rem 3.5rem",
+                justifyContent: "center",
+            }}>
                 {events.map((ev) => (
-                    <Link to={`/event/${ev._id}`}  key={ev._id} style={styles.link}>
-                    <div style={styles.card}>
-                        <h4>{ev.title}</h4>
-                        <p>
-                            {new Date(ev.date).toLocaleDateString("ro-RO", {
-                                day: "2-digit",
-                                month: "short",
-                                year:  "numeric",
-                                hour:  "2-digit",
-                                minute:"2-digit",
-                            })}
-                        </p>
-                        <p>{ev.location}</p>
-                    </div>
-                    </Link>
+                    <SimpleInfoCard
+                        key={ev._id}
+                        to={`/event/${ev._id}`}
+                        title={ev.title}
+                        subtitle={new Date(ev.date).toLocaleDateString("ro-RO", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}
+                        description={ev.location}
+                    />
                 ))}
             </div>
         </div>
