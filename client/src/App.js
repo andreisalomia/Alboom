@@ -22,6 +22,8 @@ import { SocketProvider } from './contexts/SocketContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import EventDetail from './components/EventDetail';
+import Artists from './components/Artists';
+import TopSongs from './components/TopSongs';
 
 function LoginPage() {
   const { login } = useAuth();
@@ -55,6 +57,8 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPasswordForm />} />
         <Route path="/song/:id" element={<SongDetail />} />
         <Route path="/album/:id" element={<AlbumDetail />} />        <Route path="/artist/:id" element={<ArtistDetail />} />        <Route path="/event/:id" element={<EventDetail />} />
+        <Route path="/topsongs" element={<TopSongs />} />
+        <Route path="/artists" element={<Artists />} />
         <Route path="/threads" element={<ThreadsPage />} />
         <Route path="/threads/:id" element={<ThreadDetail />} />
         <Route path="/messages" element={<MessagesOverview />} />
