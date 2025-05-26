@@ -39,8 +39,19 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{ textAlign: "center", paddingTop: "1rem", paddingBottom: "1rem" }}>
-      <h1>Welcome to Alboom</h1>
+    <div style={{ textAlign: "center", paddingTop: "2.5rem", paddingBottom: "1rem" }}>
+      <h1
+        style={{
+          fontSize: "3.2rem",
+          fontWeight: 700,
+          letterSpacing: "0.5px",
+          margin: "0 0 1.5rem 0",
+          color: "#23272f",
+          textShadow: "0 2px 16px #e0e7ff20"
+        }}
+      >
+        Welcome to Alboom
+      </h1>
       <SearchBar />
 
       {!user && (
