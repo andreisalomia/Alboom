@@ -33,14 +33,19 @@ export default function ProfileFriends() {
               onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)")}
               onMouseLeave={e => (e.currentTarget.style.boxShadow = "0 0 0 rgba(0,0,0,0)")}
             >
+              {/* Profile image or first letter of the name */}
               <div
                 style={{
                   width: "50px",
                   height: "50px",
                   margin: "0 auto 0.5rem",
                   borderRadius: "50%",
-                  background: "#007bff",
-                  color: "#fff",
+                  background: friend.profileImage 
+                    ? `url(/api/users/avatar/${friend.profileImage})`  // Show profile image if available
+                    : '#007bff',  // Fallback to blue if no profile image
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  color: friend.profileImage ? 'transparent' : '#fff',  // Hide text if image exists
                   fontWeight: "bold",
                   fontSize: "1.4rem",
                   display: "flex",
@@ -48,7 +53,8 @@ export default function ProfileFriends() {
                   justifyContent: "center"
                 }}
               >
-                {friend.name?.charAt(0).toUpperCase()}
+                {/* Show first letter of the name if there's no profile image */}
+                {!friend.profileImage && friend.name?.charAt(0).toUpperCase()}
               </div>
               <p style={{ margin: 0, fontWeight: 500 }}>{friend.name}</p>
             </Link>

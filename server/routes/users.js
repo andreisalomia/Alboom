@@ -36,7 +36,7 @@ router.get('/:userId', async (req, res) => {
       .populate('favoriteArtists')
       .populate('favoriteAlbums')
       .populate('favoriteSongs')
-      .populate('friends', 'name')
+      .populate('friends', 'name profileImage')
       .populate('friendRequestsReceived', 'name');
 
     if (!user) {
@@ -177,26 +177,29 @@ router.get('/avatar/:fileId', async (req, res) => {
     const fileId = req.params.fileId;
     console.log('Avatar download requested for ID:', fileId);
 
+    // Convert fileId to ObjectId
     const _id = new mongoose.Types.ObjectId(fileId);
-    // check the file exists
+
+    // Check if the file exists in GridFS
     const files = await bucket.find({ _id }).toArray();
     if (!files || files.length === 0) {
       console.warn('No avatar file found for', fileId);
-      return res.sendStatus(404);
+      return res.sendStatus(404);  // File not found
     }
 
-    // stream it
+    // Stream the file from GridFS
     bucket.openDownloadStream(_id)
       .on('error', err => {
         console.error('GridFS download error:', err);
-        res.sendStatus(500);
+        res.sendStatus(500);  // Internal server error
       })
-      .pipe(res);
+      .pipe(res);  // Pipe the file to the response
   } catch (err) {
     console.error('Avatar endpoint error:', err);
-    res.sendStatus(400);
+    res.sendStatus(400);  // Bad request error
   }
 });
+
 
 router.patch('/me', authMiddleware, upload.single('avatar'), async (req, res) => {
   try {

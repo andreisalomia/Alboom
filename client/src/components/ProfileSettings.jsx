@@ -4,16 +4,25 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { updateProfile, checkUsername } from '../api/users';
 import { useNavigate } from 'react-router-dom';
+import '../styles/ProfileSettings.css';
 
 export default function ProfileSettings() {
   const { user, setUser, authLoading } = useAuth();
   const { notify } = useNotifications();
   const navigate = useNavigate();
 
-  const [name, setName] = useState(user?.name || '');
-  const [avatarFile, setAvatarFile] = useState(null);
+  const [name, setName] = useState(user?.name || '');  const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+
+  // Curățăm URL-ul creat pentru preview când se schimbă fișierul
+  useEffect(() => {
+    if (avatarFile) {
+      const objectUrl = URL.createObjectURL(avatarFile);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [avatarFile]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -31,7 +40,7 @@ export default function ProfileSettings() {
         setError('');
       } catch (err) {
         if (err.response?.status === 409) {
-          setError(`The username “${name}” is already taken.`);
+          setError(`The username "${name}" is already taken.`);
         }
       }
     }
@@ -59,7 +68,7 @@ export default function ProfileSettings() {
       navigate(`/profile/${updated.id}`, { replace: true });
     } catch (err) {
       if (err.response?.status === 409) {
-        setError(`The username “${name}” is already taken. Please choose another.`);
+        setError(`The username "${name}" is already taken. Please choose another.`);
       } else {
         notify('Could not save changes.', { type: 'error' });
       }
@@ -69,52 +78,163 @@ export default function ProfileSettings() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-6">
-      <div>
-        <label className="block mb-2">Current Avatar</label>
-        {user.profileImage ? (
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden' }}>
-            <img
-              src={user.profileImage}
-              alt="avatar"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+    <div className="settings-container">
+      <h2 className="settings-title">Profile Settings</h2>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="settings-section">
+          <h3>Profile Picture</h3>
+          <div className="avatar-section">            <div className="avatar-preview">
+              {avatarFile ? (
+                <img src={URL.createObjectURL(avatarFile)} alt="New avatar preview" />
+              ) : user.profileImage ? (
+                <img src={user.profileImage} alt="Current avatar" />
+              ) : (
+                <span>{user.name.charAt(0).toUpperCase()}</span>
+              )}
+            </div><div className="file-input-wrapper">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('profile-picture-input').click()}
+                  className="edit-button"
+                >
+                  Change Profile Picture
+                </button>
+                <input
+                  id="profile-picture-input"
+                  type="file"
+                  accept="image/*"                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                      setAvatarFile(file);
+                    } else {
+                      notify('Please select an image file.', { type: 'error' });
+                    }
+                  }}
+                  disabled={loading}
+                  style={{ display: 'none' }}
+                />
+              </div>            {avatarFile && (
+              <div className="avatar-actions">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const formData = new FormData();
+                    formData.append('avatar', avatarFile);
+                    setLoading(true);
+                    try {
+                      const { data: updated } = await updateProfile(formData);
+                      updated.id = updated._id;
+                      updated.profileImage = updated.profileImage
+                        ? `/api/users/avatar/${updated.profileImage}`
+                        : null;
+                      setUser(updated);
+                      notify('Profile picture updated successfully');
+                      setAvatarFile(null);
+                    } catch (err) {
+                      notify('Could not update profile picture.', { type: 'error' });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="action-btn save-btn"
+                  disabled={loading}
+                >
+                  Save Profile Picture
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAvatarFile(null)}
+                  className="cancel-button"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
-        ) : (
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#e2e8f0' }} />
-        )}
-      </div>
+        </div>
 
-      <div>
-        <label className="block mb-2">Change Avatar</label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={e => setAvatarFile(e.target.files[0])}
-          disabled={loading}
-        />
-      </div>
-
-      <div>
-        <label className="block mb-2">Username</label>
-        <input
-          type="text"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onBlur={handleBlur}
-          disabled={loading}
-          className="w-full border rounded p-2"
-        />
-        {error && <p className="text-red-600 mt-1">{error}</p>}
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading || Boolean(error)}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        {loading ? 'Saving…' : 'Save Changes'}
-      </button>
-    </form>
+        <div className="settings-section">
+          <h3>Account Information</h3>
+          <div className="username-section">
+            <div className="current-username">
+              <label className="input-label">Username</label>
+              <div className="username-display">
+                <span>{user.name}</span>
+                {!isEditingUsername && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingUsername(true)}
+                    className="edit-button"
+                  >
+                    Change Username
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {isEditingUsername && (              <div className="username-change">
+                <div className="input-wrapper">                  <input
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    onBlur={handleBlur}
+                    disabled={loading}
+                    className="input-field"
+                    placeholder="Enter new username"
+                    aria-label="New username"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingUsername(false);
+                      setName(user.name);
+                      setError('');
+                    }}
+                    className="cancel-button"
+                  >
+                    Cancel
+                  </button>
+                </div>                {error && <p className="error-message">{error}</p>}
+                {name !== user.name && !error && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setError('');
+                      setLoading(true);
+                      const formData = new FormData();
+                      formData.append('name', name);
+                      try {
+                        const { data: updated } = await updateProfile(formData);
+                        updated.id = updated._id;
+                        updated.profileImage = updated.profileImage
+                          ? `/api/users/avatar/${updated.profileImage}`
+                          : null;
+                        setUser(updated);
+                        notify('Username updated successfully');
+                        setIsEditingUsername(false);
+                      } catch (err) {
+                        if (err.response?.status === 409) {
+                          setError(`The username "${name}" is already taken. Please choose another.`);
+                        } else {
+                          notify('Could not update username.', { type: 'error' });
+                        }
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    className="action-btn save-btn"
+                    disabled={loading}
+                  >
+                    Save Username
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

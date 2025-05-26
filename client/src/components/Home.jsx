@@ -18,10 +18,30 @@ export default function HomePage() {
     setRefreshFeed(prev => !prev);
   };
 
-    return (
-        <div style={{ textAlign: "center", paddingTop: "1rem", paddingBottom: "1rem" }}>
-            <h1>Welcome to Alboom</h1>
-            <SearchBar />
+  const baseButtonStyle = {
+    padding: '0.5rem 1.2rem',
+    margin: '0 0.5rem',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    color: 'white',
+  };
+
+  const logoutStyle = {
+    ...baseButtonStyle,
+    backgroundColor: '#dc3545',
+  };
+
+  const changePwStyle = {
+    ...baseButtonStyle,
+    backgroundColor: '#007bff',
+  };
+
+  return (
+    <div style={{ textAlign: "center", paddingTop: "1rem", paddingBottom: "1rem" }}>
+      <h1>Welcome to Alboom</h1>
+      <SearchBar />
 
       {!user && (
         <p style={{ margin: "1rem 0" }}>
@@ -32,10 +52,14 @@ export default function HomePage() {
       {user && (
         <div style={{ margin: "1rem 0" }}>
           <p>Logged in as {user.name} ({user.role})</p>
-          <button onClick={logout}>Logout</button>
-          <button onClick={() => setShowChangePassword(true)}>
-            Change Password
-          </button>
+          <div>
+            <button style={logoutStyle} onClick={logout}>
+              Logout
+            </button>
+            <button style={changePwStyle} onClick={() => setShowChangePassword(true)}>
+              Change Password
+            </button>
+          </div>
           {showChangePassword && (
             <ChangePasswordForm onClose={() => setShowChangePassword(false)} />
           )}
