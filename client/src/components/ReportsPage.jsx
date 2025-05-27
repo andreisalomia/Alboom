@@ -91,7 +91,6 @@ export default function ReportsPage() {
               <th style={thStyle}>Reason</th>
               <th style={thStyle}>Reporter</th>
               <th style={thStyle}>Actions</th>
-              <th style={thStyle}>Content</th>
             </tr>
           </thead>
           <tbody>
@@ -113,20 +112,15 @@ export default function ReportsPage() {
                   <button
                     style={{
                       ...actionBtnStyle,
-                      background: "#007bff",
-                      margin: 0,
-                      padding: "0.3rem 0.7rem",
-                      fontSize: "0.95rem"
+                      background: "#007bff"
                     }}
                     onClick={() => window.open(r.url, "_blank")}
                     disabled={!r.url}
                   >
                     Go To
                   </button>
-                </td>
-                <td style={tdStyle}>
                   <button
-                    style={actionBtnStyle}
+                    style={{ ...actionBtnStyle, marginLeft: 8 }}
                     onClick={() => handleDeleteContent(r)}
                   >
                     Delete

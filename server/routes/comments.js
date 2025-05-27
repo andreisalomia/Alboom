@@ -83,6 +83,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       });
     }
 
+    await Report.deleteMany({ type: 'comment', targetId: comment._id });
+
     await Comment.deleteOne({ _id: req.params.id });  
     res.json({ message: 'Comment deleted' });
   } catch (err) {

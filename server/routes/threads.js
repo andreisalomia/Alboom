@@ -109,6 +109,8 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     // Also delete all comments associated with this thread
     await Comment.deleteMany({ targetType: 'thread', targetId: thread._id });
 
+    await Report.deleteMany({ type: 'thread', targetId: thread._id });
+
     await Thread.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Thread deleted successfully' });
